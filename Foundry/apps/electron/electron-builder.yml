@@ -1,0 +1,19 @@
+appId: ai.taskmanager.foundry
+productName: Foundry
+directories:
+  output: dist/installers
+files:
+  - dist/**/*
+  - package.json
+mac:
+  target: dmg
+  category: public.app-category.productivity
+  icon: assets/icon-512.png
+  iconSize: 512
+linux:
+  target: AppImage
+  category: Office
+  icon: assets/icon-512.png
+win:
+  target: nsis
+  icon: assets/icon.ico

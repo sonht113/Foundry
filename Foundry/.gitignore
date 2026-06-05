@@ -1,0 +1,15 @@
+node_modules/
+dist/
+data/
+.DS_Store
+*.log
+.better-sqlite3-nodejs.tmp
+
+# Environment / secrets — DO NOT COMMIT
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+.turbo/
+*.tsbuildinfo

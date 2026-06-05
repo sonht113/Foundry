@@ -1,0 +1,41 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+out/
+release/
+*.tsbuildinfo
+.turbo/
+
+# Environment / secrets — DO NOT COMMIT
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Database local data
+data/
+.better-sqlite3-nodejs.tmp
+
+# Agent / AI personal config
+.agents/
+skills-lock.json
+opencode.json

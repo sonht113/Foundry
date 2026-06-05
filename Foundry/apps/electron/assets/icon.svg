@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#C4B5FD"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded diamond shape -->
+  <rect x="172" y="312" width="680" height="680" rx="120" transform="rotate(45 512 652)" fill="url(#grad)"/>
+
+  <!-- F letterform (white cutout) -->
+  <g transform="translate(396, 400)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 8 V 208" stroke-width="38"/>
+    <path d="M0 8 H 208" stroke-width="38"/>
+    <path d="M0 108 H 148" stroke-width="38"/>
+  </g>
+
+  <!-- Spark dot -->
+  <circle cx="690" cy="210" r="26" fill="url(#spark-grad)" opacity="0.85"/>
+</svg>
