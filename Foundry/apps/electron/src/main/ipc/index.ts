@@ -7,6 +7,9 @@ import { registerProjectHandlers } from "@/main/ipc/project.handler";
 import { registerSettingHandlers } from "@/main/ipc/setting.handler";
 import { registerTagHandlers } from "@/main/ipc/tag.handler";
 import { registerTaskHandlers } from "@/main/ipc/task.handler";
+import { registerTerminalHandlers } from "@/main/ipc/terminal.handler";
+
+export { registerTerminalHandlers };
 
 export function registerAllHandlers(
   projectService: ProjectService,

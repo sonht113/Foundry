@@ -6,6 +6,7 @@ import { Sidebar } from "./components/dashboard/Sidebar";
 import { SearchModal } from "./components/search/SearchModal";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { TaskDetail } from "./components/task/TaskDetail";
+import { TerminalPanel } from "./components/terminal/TerminalPanel";
 import { useProjectStore } from "./stores/projectStore";
 import { useTaskStore } from "./stores/taskStore";
 import { useUIStore } from "./stores/uiStore";
@@ -18,7 +19,7 @@ const STATUS_KEYS: Record<string, string> = {
 };
 
 export function App() {
-  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
   const searchOpen = useUIStore((s) => s.searchOpen);
   const selectedTaskId = useTaskStore((s) => s.selectedTaskId);
   const loadProjects = useProjectStore((s) => s.loadProjects);
@@ -30,6 +31,10 @@ export function App() {
   const addToast = useUIStore((s) => s.addToast);
   const setTheme = useUIStore((s) => s.setTheme);
   const settingsOpen = useUIStore((s) => s.settingsOpen);
+  const terminalOpen = useUIStore((s) => s.terminalOpen);
+  const toggleTerminal = useUIStore((s) => s.toggleTerminal);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const setSidebarCollapsed = useUIStore((s) => s.setSidebarCollapsed);
 
   useEffect(() => {
     loadProjects();
@@ -40,11 +45,23 @@ export function App() {
         else setTheme("dark");
       })
       .catch(() => {});
+    window.electronAPI.setting
+      .get("sidebarCollapsed")
+      .then((saved) => {
+        if (saved === "true") setSidebarCollapsed(true);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const meta = e.metaKey || e.ctrlKey;
+
+      if (meta && e.key === "b") {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
 
       if (meta && e.key === "k") {
         e.preventDefault();
@@ -74,16 +91,22 @@ export function App() {
         e.preventDefault();
         createTask({ projectId: currentProjectId, title: "New Task" }).catch(() => {});
       }
+
+      if (meta && e.key === "`") {
+        e.preventDefault();
+        toggleTerminal();
+        return;
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [searchOpen, selectedTaskId, currentProjectId]);
+  }, [searchOpen, selectedTaskId, currentProjectId, toggleSidebar]);
 
   return (
     <div className="flex h-full">
-      {sidebarOpen && <Sidebar />}
+      <Sidebar collapsed={sidebarCollapsed} />
       <main className="flex min-w-0 flex-1 flex-col">
-        {settingsOpen ? <SettingsPage /> : <Dashboard />}
+        {terminalOpen ? <TerminalPanel /> : settingsOpen ? <SettingsPage /> : <Dashboard />}
       </main>
       {selectedTaskId && <TaskDetail />}
       {searchOpen && <SearchModal />}

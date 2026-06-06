@@ -6,7 +6,7 @@ import { createProjectService, createColumnService, createTaskService, createTag
 import dotenv from "dotenv";
 import { app, BrowserWindow, net, protocol } from "electron";
 
-import { registerAllHandlers } from "@/main/ipc";
+import { registerAllHandlers, registerTerminalHandlers } from "@/main/ipc";
 
 dotenv.config({ path: path.join(__dirname, "..", "..", "..", "..", ".env") });
 
@@ -66,11 +66,13 @@ app.whenReady().then(async () => {
 
   registerAllHandlers(projectService, columnService, taskService, tagService, noteService, settingRepo);
 
-  createWindow();
+  const win = createWindow();
+  registerTerminalHandlers(win);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      const newWin = createWindow();
+      registerTerminalHandlers(newWin);
     }
   });
 });

@@ -14,7 +14,9 @@ interface UIState {
   toasts: Toast[];
   searchOpen: boolean;
   sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
   settingsOpen: boolean;
+  terminalOpen: boolean;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -22,7 +24,10 @@ interface UIState {
   removeToast: (id: string) => void;
   setSearchOpen: (open: boolean) => void;
   toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   setSettingsOpen: (open: boolean) => void;
+  setTerminalOpen: (open: boolean) => void;
+  toggleTerminal: () => void;
 }
 
 let toastId = 0;
@@ -32,7 +37,9 @@ export const useUIStore = create<UIState>((set) => ({
   toasts: [],
   searchOpen: false,
   sidebarOpen: true,
+  sidebarCollapsed: false,
   settingsOpen: false,
+  terminalOpen: false,
 
   setTheme: (theme) => {
     set({ theme });
@@ -64,6 +71,25 @@ export const useUIStore = create<UIState>((set) => ({
 
   removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
   setSearchOpen: (open) => set({ searchOpen: open }),
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  toggleSidebar: () =>
+    set((state) => {
+      const next = !state.sidebarCollapsed;
+      try {
+        window.electronAPI.setting?.set("sidebarCollapsed", String(next)).catch(() => {});
+      } catch {
+        // non-critical
+      }
+      return { sidebarCollapsed: next };
+    }),
+  setSidebarCollapsed: (collapsed) => {
+    set({ sidebarCollapsed: collapsed });
+    try {
+      window.electronAPI.setting?.set("sidebarCollapsed", String(collapsed)).catch(() => {});
+    } catch {
+      // non-critical
+    }
+  },
   setSettingsOpen: (open) => set({ settingsOpen: open }),
+  setTerminalOpen: (open) => set({ terminalOpen: open }),
+  toggleTerminal: () => set((state) => ({ terminalOpen: !state.terminalOpen })),
 }));

@@ -75,6 +75,18 @@ interface ElectronAPI {
     get: (key: string) => Promise<string | null>;
     set: (key: string, value: string) => Promise<{ success: boolean }>;
   };
+  terminal: {
+    getShells: () => Promise<{ shells: ShellOption[] }>;
+    spawn: (shellPath?: string) => Promise<{ success: boolean; error?: string; shellPath?: string }>;
+    getCurrentShell: () => Promise<{ shellPath: string | null }>;
+    isAlive: () => Promise<{ alive: boolean }>;
+    write: (data: string) => Promise<{ success: boolean }>;
+    resize: (cols: number, rows: number) => Promise<{ success: boolean }>;
+    kill: () => Promise<{ success: boolean }>;
+    onData: (callback: (data: string) => void) => void;
+    onExit: (callback: (code: number) => void) => void;
+    removeAllListeners: () => void;
+  };
 }
 
 interface Project {
@@ -123,10 +135,16 @@ interface Note {
   updatedAt: string;
 }
 
+interface ShellOption {
+  id: string;
+  name: string;
+  path: string;
+}
+
 declare global {
   interface Window {
     electronAPI: ElectronAPI;
   }
 }
 
-export type { Project, Task, Column, Tag, Note };
+export type { Project, Task, Column, Tag, Note, ShellOption };

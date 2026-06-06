@@ -49,3 +49,36 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* --- xterm.js overrides --- */
+.xterm {
+  height: 100% !important;
+  padding: 4px 8px;
+}
+
+.xterm .xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+.xterm .xterm-screen {
+  /* Force full render area */
+  width: 100% !important;
+}

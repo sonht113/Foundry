@@ -83,6 +83,25 @@ const electronAPI = {
     get: (key: string) => ipcRenderer.invoke("setting:get", key),
     set: (key: string, value: string) => ipcRenderer.invoke("setting:set", key, value),
   },
+  terminal: {
+    getShells: () => ipcRenderer.invoke("terminal:getShells"),
+    spawn: (shellPath?: string) => ipcRenderer.invoke("terminal:spawn", shellPath),
+    getCurrentShell: () => ipcRenderer.invoke("terminal:getCurrentShell"),
+    isAlive: () => ipcRenderer.invoke("terminal:isAlive"),
+    write: (data: string) => ipcRenderer.invoke("terminal:write", data),
+    resize: (cols: number, rows: number) => ipcRenderer.invoke("terminal:resize", cols, rows),
+    kill: () => ipcRenderer.invoke("terminal:kill"),
+    onData: (callback: (data: string) => void) => {
+      ipcRenderer.on("terminal:data", (_event, data: string) => callback(data));
+    },
+    onExit: (callback: (code: number) => void) => {
+      ipcRenderer.on("terminal:exit", (_event, code: number) => callback(code));
+    },
+    removeAllListeners: () => {
+      ipcRenderer.removeAllListeners("terminal:data");
+      ipcRenderer.removeAllListeners("terminal:exit");
+    },
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);
