@@ -1,8 +1,8 @@
-import type { Pool } from "pg";
 import type { Setting } from "@foundry/shared";
+import type { Queryable } from "../connection";
 
 export class SettingRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   async get(key: string): Promise<string | null> {
     const { rows } = await this.pool.query<{ value: string }>(

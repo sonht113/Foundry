@@ -1,8 +1,8 @@
-import type { Pool } from "pg";
 import type { INoteRepository } from "@foundry/domain";
 import type { Note } from "@foundry/shared";
 import { generateId } from "@foundry/shared";
 import { NotFoundError, ValidationError } from "@foundry/domain";
+import type { Queryable } from "../connection";
 
 interface NoteRow {
   id: string;
@@ -23,7 +23,7 @@ function mapRow(row: NoteRow): Note {
 }
 
 export class NoteRepository implements INoteRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   private now(): string {
     return new Date().toISOString();

@@ -1,8 +1,8 @@
-import type { Pool } from "pg";
 import type { ITagRepository } from "@foundry/domain";
 import type { Tag } from "@foundry/shared";
 import { generateId } from "@foundry/shared";
 import { NotFoundError, ValidationError } from "@foundry/domain";
+import type { Queryable } from "../connection";
 
 interface TagRow {
   id: string;
@@ -14,7 +14,7 @@ function mapRow(row: TagRow): Tag {
 }
 
 export class TagRepository implements ITagRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   async list(): Promise<Tag[]> {
     const { rows } = await this.pool.query<TagRow>(

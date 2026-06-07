@@ -1,8 +1,8 @@
-import type { Pool } from "pg";
 import type { ITaskRepository, CreateTaskInput, UpdateTaskInput, SearchTasksInput } from "@foundry/domain";
 import type { Task, Tag } from "@foundry/shared";
 import { generateId } from "@foundry/shared";
 import { NotFoundError, ValidationError } from "@foundry/domain";
+import type { Queryable } from "../connection";
 
 interface TaskRow {
   id: string;
@@ -41,7 +41,7 @@ function mapRow(row: TaskRow): Task {
 const VALID_PRIORITIES = ["low", "medium", "high", "critical"];
 
 export class TaskRepository implements ITaskRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   private now(): string {
     return new Date().toISOString();

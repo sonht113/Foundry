@@ -1,8 +1,8 @@
-import type { Pool } from "pg";
 import type { IColumnRepository, CreateColumnInput, UpdateColumnInput } from "@foundry/domain";
 import type { Column } from "@foundry/shared";
 import { generateId } from "@foundry/shared";
 import { NotFoundError, ValidationError } from "@foundry/domain";
+import type { Queryable } from "../connection";
 
 interface ColumnRow {
   id: string;
@@ -30,7 +30,7 @@ const DEFAULT_COLUMNS = [
 ];
 
 export class ColumnRepository implements IColumnRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   async list(projectId: string): Promise<Column[]> {
     const { rows } = await this.pool.query<ColumnRow>(

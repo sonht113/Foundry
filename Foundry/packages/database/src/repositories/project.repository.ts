@@ -1,8 +1,8 @@
-import type { Pool, QueryResultRow } from "pg";
 import type { IProjectRepository, CreateProjectInput, UpdateProjectInput, TaskCount } from "@foundry/domain";
 import type { Project } from "@foundry/shared";
 import { generateId } from "@foundry/shared";
 import { NotFoundError, ValidationError } from "@foundry/domain";
+import type { Queryable } from "../connection";
 
 interface ProjectRow {
   id: string;
@@ -25,7 +25,7 @@ function mapRow(row: ProjectRow): Project {
 }
 
 export class ProjectRepository implements IProjectRepository {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Queryable) {}
 
   private now(): string {
     return new Date().toISOString();
