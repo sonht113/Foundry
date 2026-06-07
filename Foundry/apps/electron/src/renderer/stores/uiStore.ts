@@ -17,6 +17,7 @@ interface UIState {
   sidebarCollapsed: boolean;
   settingsOpen: boolean;
   terminalOpen: boolean;
+  dbBackend: "supabase" | "pglite" | null;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -28,6 +29,7 @@ interface UIState {
   setSettingsOpen: (open: boolean) => void;
   setTerminalOpen: (open: boolean) => void;
   toggleTerminal: () => void;
+  setDbBackend: (backend: "supabase" | "pglite") => void;
 }
 
 let toastId = 0;
@@ -40,6 +42,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
   settingsOpen: false,
   terminalOpen: false,
+  dbBackend: null,
 
   setTheme: (theme) => {
     set({ theme });
@@ -92,4 +95,5 @@ export const useUIStore = create<UIState>((set) => ({
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   setTerminalOpen: (open) => set({ terminalOpen: open }),
   toggleTerminal: () => set((state) => ({ terminalOpen: !state.terminalOpen })),
+  setDbBackend: (backend) => set({ dbBackend: backend }),
 }));

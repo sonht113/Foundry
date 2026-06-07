@@ -87,6 +87,16 @@ interface ElectronAPI {
     onExit: (callback: (code: number) => void) => void;
     removeAllListeners: () => void;
   };
+  db: {
+    getBackend: () => Promise<"supabase" | "pglite">;
+    switchBackend: (backend: "supabase" | "pglite") => Promise<{ backend: string; needsRestart: boolean }>;
+    restartApp: () => Promise<{ success: boolean }>;
+  };
+  config: {
+    get: () => Promise<{ database: { backend: string; databaseUrl?: string; supabaseUrl?: string; supabaseKey?: string } }>;
+    setDatabase: (db: { backend: "supabase" | "pglite"; databaseUrl?: string; supabaseUrl?: string; supabaseKey?: string }) => Promise<{ success: boolean }>;
+    testConnection: (databaseUrl: string) => Promise<{ success: boolean; error?: string }>;
+  };
 }
 
 interface Project {
