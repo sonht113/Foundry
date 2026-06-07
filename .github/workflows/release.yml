@@ -42,7 +42,7 @@ jobs:
 
       - name: Install pnpm dependencies
         working-directory: Foundry
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build
         working-directory: Foundry
