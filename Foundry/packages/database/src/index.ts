@@ -1,5 +1,5 @@
-export { createConnection, getPool, getDb, closeConnection } from "./connection";
-export type { DatabaseInstance } from "./connection";
+export { createConnection, getPool, getQueryable, getDb, getBackend, closeConnection } from "./connection";
+export type { DatabaseInstance, Queryable } from "./connection";
 export { migrate, drizzleRunMigrations } from "./migrate";
 export * from "./schema";
 

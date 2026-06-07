@@ -2,13 +2,18 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
+import { createPGliteConnection } from "./pglite-adapter";
+import type { DatabaseInstance, Queryable } from "./pglite-adapter";
 
 let pool: Pool | null = null;
 let db: NodePgDatabase<typeof schema> | null = null;
 
-export function createConnection(connectionString?: string): {
-  pool: Pool;
+let instance: DatabaseInstance | null = null;
+
+function createSupabaseConnection(connectionString?: string): {
   db: NodePgDatabase<typeof schema>;
+  pool: Queryable;
+  pgPool: Pool;
 } {
   const url = connectionString ?? process.env.DATABASE_URL;
   if (!url) {
@@ -19,15 +24,55 @@ export function createConnection(connectionString?: string): {
     );
   }
 
-  pool = new Pool({ connectionString: url, max: 20 });
-  db = drizzle(pool, { schema });
+  const pgPool = new Pool({ connectionString: url, max: 20 });
+  const drizzleDb = drizzle(pgPool, { schema });
 
-  return { pool, db };
+  pool = pgPool;
+  db = drizzleDb;
+
+  return {
+    db: drizzleDb,
+    pool: pgPool as unknown as Queryable,
+    pgPool,
+  };
+}
+
+export async function createConnection(
+  backend?: string,
+  connString?: string
+): Promise<{ db: NodePgDatabase<typeof schema> | null; pool: Queryable }> {
+  const resolved = backend ?? process.env.DATABASE_BACKEND ?? "supabase";
+
+  if (resolved === "pglite") {
+    const pgData = process.env.PGLITE_DATA_DIR;
+    const inst = await createPGliteConnection(pgData);
+    instance = inst;
+    // drizzle db hack — cast PGlite drizzle to node-postgres type for migrator compat
+    db = inst.db;
+    pool = null;
+    return { db: inst.db!, pool: inst.pool };
+  }
+
+  const { db: drizzleDb, pool: queryable } = createSupabaseConnection(connString);
+  return { db: drizzleDb, pool: queryable };
 }
 
 export function getPool(): Pool {
+  if (instance?.backend === "pglite") {
+    throw new Error(
+      "getPool() is not available with PGlite backend. Use getQueryable() instead."
+    );
+  }
   if (!pool) throw new Error("Database not initialized. Call createConnection() first.");
   return pool;
+}
+
+export function getQueryable(): Queryable {
+  if (instance?.backend === "pglite") {
+    return instance.pool;
+  }
+  if (!pool) throw new Error("Database not initialized. Call createConnection() first.");
+  return pool as unknown as Queryable;
 }
 
 export function getDb(): NodePgDatabase<typeof schema> {
@@ -35,7 +80,18 @@ export function getDb(): NodePgDatabase<typeof schema> {
   return db;
 }
 
+export function getBackend(): "supabase" | "pglite" {
+  return instance?.backend ?? "supabase";
+}
+
 export async function closeConnection(): Promise<void> {
+  if (instance) {
+    await instance.close();
+    instance = null;
+    pool = null;
+    db = null;
+    return;
+  }
   if (pool) {
     await pool.end();
     pool = null;
@@ -43,4 +99,4 @@ export async function closeConnection(): Promise<void> {
   }
 }
 
-export type DatabaseInstance = ReturnType<typeof createConnection>;
+export type { DatabaseInstance, Queryable } from "./pglite-adapter";

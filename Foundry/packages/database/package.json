@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate"
   },
-  "dependencies": {
+    "dependencies": {
+    "@electric-sql/pglite": "^0.5.0",
     "@foundry/domain": "workspace:*",
     "@foundry/shared": "workspace:*",
     "@supabase/supabase-js": "^2.0.0",
