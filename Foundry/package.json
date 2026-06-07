@@ -8,7 +8,8 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "turbo run format",
-    "mcp-server": "pnpm --filter @foundry/mcp-server run mcp-server"
+    "mcp-server": "pnpm --filter @foundry/mcp-server run mcp-server",
+    "bump": "node scripts/bump.js"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

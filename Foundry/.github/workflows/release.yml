@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+        working-directory: apps/electron
+
+      - name: Build MCP Server
+        run: pnpm run build
+        working-directory: apps/mcp-server
+
+      - name: Package Windows
+        run: pnpm run pack:win
+        working-directory: apps/electron
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/electron/dist/installers/Foundry Setup *.exe
+          generate_release_notes: true
