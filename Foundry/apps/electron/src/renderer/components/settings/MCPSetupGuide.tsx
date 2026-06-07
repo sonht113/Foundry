@@ -45,6 +45,30 @@ const PLATFORMS: Record<Platform, PlatformInfo> = {
   },
 };
 
+interface EstimatedPaths {
+  serverPath: string;
+  dataDir: string;
+  nodePath: string;
+}
+
+const ESTIMATED_PATHS: Record<Platform, EstimatedPaths> = {
+  win32: {
+    serverPath: "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
+    dataDir: "%APPDATA%\\Foundry\\pglite-data",
+    nodePath: "C:\\Program Files\\Foundry\\resources\\app\\node_modules",
+  },
+  darwin: {
+    serverPath: "/Applications/Foundry.app/Contents/Resources/mcp-server/server.js",
+    dataDir: "~/Library/Application Support/Foundry/pglite-data",
+    nodePath: "/Applications/Foundry.app/Contents/Resources/app/node_modules",
+  },
+  linux: {
+    serverPath: "/opt/Foundry/resources/mcp-server/server.js",
+    dataDir: "~/.local/share/Foundry/pglite-data",
+    nodePath: "/opt/Foundry/resources/app/node_modules",
+  },
+};
+
 interface McpServerConfig {
   serverPath: string;
   dataDir: string;
@@ -154,6 +178,20 @@ export function MCPSetupGuide() {
       });
   }, []);
 
+  const actualPlatform = detectPlatform();
+  const isActualPlatform = platform === actualPlatform;
+
+  const displayPaths = useMemo<EstimatedPaths>(() => {
+    if (isActualPlatform && mcpConfig) {
+      return {
+        serverPath: mcpConfig.serverPath,
+        dataDir: mcpConfig.dataDir,
+        nodePath: mcpConfig.nodePath,
+      };
+    }
+    return ESTIMATED_PATHS[platform];
+  }, [platform, isActualPlatform, mcpConfig]);
+
   const info = PLATFORMS[platform];
 
   const baseConfig = useMemo(
@@ -165,8 +203,8 @@ export function MCPSetupGuide() {
   const standardConfigStr = useMemo(() => toStandardJson(baseConfig), [baseConfig]);
   const copilotConfigStr = useMemo(() => toCopilotJson(baseConfig), [baseConfig]);
 
-  const serverPath = mcpConfig?.serverPath ?? "...";
-  const dataDir = mcpConfig?.dataDir ?? "...";
+  const serverPath = displayPaths.serverPath;
+  const dataDir = displayPaths.dataDir;
 
   function copyConfig(key: string, text: string) {
     navigator.clipboard.writeText(text).then(() => {
@@ -206,6 +244,11 @@ export function MCPSetupGuide() {
       <div>
         <h3 className="mb-3 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           Server Info
+          {!isActualPlatform ? (
+            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              Estimated
+            </span>
+          ) : null}
         </h3>
         <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
           <div className="mb-3 flex items-center gap-2">
@@ -231,15 +274,21 @@ export function MCPSetupGuide() {
                 {dataDir}
               </code>
             </div>
-            {mcpConfig?.nodePath ? (
+            {displayPaths.nodePath ? (
               <div>
                 <label className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
                   Node Modules Path (for installed app)
                 </label>
                 <code className="mt-1 block truncate rounded-md bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-                  {mcpConfig.nodePath}
+                  {displayPaths.nodePath}
                 </code>
               </div>
+            ) : null}
+            {!isActualPlatform ? (
+              <p className="text-[10px] leading-relaxed text-amber-600 dark:text-amber-400">
+                Paths are approximate. Build Foundry on {PLATFORMS[platform].label} to verify the
+                exact production paths.
+              </p>
             ) : null}
           </div>
         </div>
