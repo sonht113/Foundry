@@ -1,0 +1,68 @@
+name: Build & Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: --mac
+            artifact-name: macos-dmg
+          - os: ubuntu-latest
+            target: --linux
+            artifact-name: linux-appimage
+          - os: windows-latest
+            target: --win
+            artifact-name: windows-nsis
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: Foundry/pnpm-lock.yaml
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libfuse2
+
+      - name: Install pnpm dependencies
+        working-directory: Foundry
+        run: pnpm install
+
+      - name: Build
+        working-directory: Foundry
+        run: pnpm build
+        env:
+          DATABASE_BACKEND: pglite
+          PGLITE_DATA_DIR: ./.pglite
+
+      - name: Package
+        working-directory: Foundry/apps/electron
+        run: npx electron-builder ${{ matrix.target }} --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Foundry-${{ matrix.artifact-name }}
+          path: Foundry/apps/electron/dist/installers/*
+          if-no-files-found: error

@@ -3,7 +3,9 @@ productName: Foundry
 directories:
   output: dist/installers
 files:
-  - dist/**/*
+  - dist/main/**/*
+  - dist/preload/**/*
+  - dist/renderer/**/*
   - package.json
 asar: false
 npmRebuild: false
@@ -18,6 +20,7 @@ linux:
   icon: assets/icon-512.png
 win:
   target:
-    - target: zip
+    - target: nsis
       arch: [x64]
+  icon: assets/icon-256.png
   sign: null
