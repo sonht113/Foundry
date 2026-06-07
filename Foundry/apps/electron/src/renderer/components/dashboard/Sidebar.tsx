@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Command, Hash, Home, Plus, Search, Settings, Terminal, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Command, Hash, Home, Plus, Search, Settings, Terminal, Trash2, Wifi, WifiOff } from "lucide-react";
 import { useState } from "react";
 
 import { useProjectStore } from "../../stores/projectStore";
@@ -35,6 +35,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
   const terminalOpen = useUIStore((s) => s.terminalOpen);
   const toggleTerminal = useUIStore((s) => s.toggleTerminal);
+  const dbBackend = useUIStore((s) => s.dbBackend);
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -257,6 +258,18 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               >
                 <Terminal size={14} />
               </button>
+              {dbBackend && (
+                <div
+                  className="flex w-full cursor-default items-center justify-center rounded-md p-2"
+                  title={`Database: ${dbBackend === "pglite" ? "PGlite (local)" : "Supabase (cloud)"}`}
+                >
+                  {dbBackend === "pglite" ? (
+                    <WifiOff size={12} className="text-amber-500" />
+                  ) : (
+                    <Wifi size={12} className="text-emerald-500" />
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -296,6 +309,19 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <Hash size={14} />
                 <span className="flex-1">Cmd+1-4 status</span>
               </div>
+              {dbBackend && (
+                <div
+                  className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-zinc-400 dark:text-zinc-600"
+                  title={`Database backend: ${dbBackend === "pglite" ? "PGlite (local/offline)" : "Supabase (cloud)"}`}
+                >
+                  {dbBackend === "pglite" ? (
+                    <WifiOff size={12} className="text-amber-500" />
+                  ) : (
+                    <Wifi size={12} className="text-emerald-500" />
+                  )}
+                  <span className="flex-1">{dbBackend === "pglite" ? "PGlite (local)" : "Supabase"}</span>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { ToastContainer } from "./components/common/ToastContainer";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Sidebar } from "./components/dashboard/Sidebar";
 import { SearchModal } from "./components/search/SearchModal";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { ConnectionDialog } from "./components/setup/ConnectionDialog";
 import { TaskDetail } from "./components/task/TaskDetail";
 import { TerminalPanel } from "./components/terminal/TerminalPanel";
 import { useProjectStore } from "./stores/projectStore";
@@ -17,6 +18,12 @@ const STATUS_KEYS: Record<string, string> = {
   "3": "review",
   "4": "done",
 };
+
+function needsSetup(db: { backend: string; databaseUrl?: string }): boolean {
+  if (db.backend === "pglite") return false;
+  if (db.backend === "supabase" && db.databaseUrl) return false;
+  return true;
+}
 
 export function App() {
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
@@ -35,9 +42,20 @@ export function App() {
   const toggleTerminal = useUIStore((s) => s.toggleTerminal);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const setSidebarCollapsed = useUIStore((s) => s.setSidebarCollapsed);
+  const setDbBackend = useUIStore((s) => s.setDbBackend);
+  const [showSetup, setShowSetup] = useState(false);
 
   useEffect(() => {
-    loadProjects();
+    window.electronAPI.config.get().then((cfg) => {
+      if (needsSetup(cfg.database)) {
+        setShowSetup(true);
+        return;
+      }
+      initializeApp();
+    }).catch(() => {
+      initializeApp();
+    });
+
     window.electronAPI.setting
       .get("theme")
       .then((saved) => {
@@ -52,6 +70,34 @@ export function App() {
       })
       .catch(() => {});
   }, []);
+
+  function initializeApp() {
+    loadProjects();
+    window.electronAPI.db
+      .getBackend()
+      .then((backend) => {
+        setDbBackend(backend);
+        if (backend) {
+          addToast(
+            backend === "pglite"
+              ? "Connected to PGlite (local database)"
+              : "Connected to Supabase (cloud database)",
+            "info"
+          );
+        }
+      })
+      .catch(() => {});
+  }
+
+  async function handleSetupComplete(backend: "supabase" | "pglite") {
+    setShowSetup(false);
+    addToast(
+      backend === "pglite"
+        ? "PGlite config saved. Restart to apply."
+        : "Supabase config saved. Restart to apply.",
+      "info"
+    );
+  }
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -104,6 +150,9 @@ export function App() {
 
   return (
     <div className="flex h-full">
+      {showSetup && (
+        <ConnectionDialog onConnected={handleSetupComplete} />
+      )}
       <Sidebar collapsed={sidebarCollapsed} />
       <main className="flex min-w-0 flex-1 flex-col">
         {terminalOpen ? <TerminalPanel /> : settingsOpen ? <SettingsPage /> : <Dashboard />}
