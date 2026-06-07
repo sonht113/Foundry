@@ -28,6 +28,7 @@ export function TerminalPanel() {
   const fitAddonRef = useRef<FitAddon | null>(null);
   const mountedRef = useRef(true);
   const respawningRef = useRef(false);
+  const retryCountRef = useRef(0);
   const selectedShellRef = useRef<string | null>(null);
   const toggleTerminal = useUIStore((s) => s.toggleTerminal);
 
@@ -50,6 +51,7 @@ export function TerminalPanel() {
       if (!shell || !termRef.current) return;
 
       selectedShellRef.current = shell.path;
+      retryCountRef.current = 0;
       const shellPath = await spawnShell(termRef.current, shell.path);
       if (shellPath) {
         setTimeout(() => handleResize(), 100);
@@ -100,8 +102,17 @@ export function TerminalPanel() {
       if (!mountedRef.current) return;
       if (respawningRef.current) return;
 
+      retryCountRef.current++;
+      if (retryCountRef.current > 3) {
+        term.writeln(
+          `\r\n\x1b[31m>> Shell keeps exiting. The shell binary may be missing or incompatible.\x1b[0m`,
+        );
+        term.writeln(`\x1b[31m>> Try a different shell from the dropdown.\x1b[0m`);
+        return;
+      }
+
       respawningRef.current = true;
-      term.writeln("\r\n\x1b[33m>> Shell exited. Respawning...\x1b[0m");
+      term.writeln(`\r\n\x1b[33m>> Shell exited. Respawning (${retryCountRef.current}/3)...\x1b[0m`);
       tryRespawn(term, 1000).then((shellPath) => {
         if (shellPath) {
           setTimeout(() => handleResize(), 100);

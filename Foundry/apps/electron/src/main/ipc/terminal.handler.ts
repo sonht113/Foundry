@@ -164,9 +164,11 @@ export function registerTerminalHandlers(win: BrowserWindow): void {
     try {
       killCurrentPty();
       const targetShell = shellPath || getDefaultShell();
+      console.error(`[Foundry Terminal] Spawning: ${targetShell}`);
       createShell(targetShell);
       return { success: true, shellPath: targetShell };
     } catch (err) {
+      console.error(`[Foundry Terminal] Spawn error:`, err);
       return { success: false, error: (err as Error).message };
     }
   });
