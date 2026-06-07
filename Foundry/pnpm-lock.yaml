@@ -163,6 +163,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.0
+        version: 0.5.1
       '@foundry/domain':
         specifier: workspace:*
         version: link:../domain
@@ -177,7 +180,7 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@types/pg@8.20.0)(@types/react@19.2.16)(pg@8.21.0)(react@19.2.7)
+        version: 0.38.4(@electric-sql/pglite@0.5.1)(@types/pg@8.20.0)(@types/react@19.2.16)(pg@8.21.0)(react@19.2.7)
       pg:
         specifier: ^8.0.0
         version: 8.21.0
@@ -331,6 +334,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.1':
+    resolution: {integrity: sha512-h2Vc+qkQqsEL5kvyN5nBAxn3Vbyvka7QfDW7Io+CdcwU1+X8JbCAN2og+5dI11S3eJuDfroUCxzJaap6k+ezEw==}
 
   '@electron/asar@3.4.1':
     resolution: {integrity: sha512-i4/rNPRS84t0vSRa2HorerGRXWyF4vThfHesw0dmcWHp+cspK743UanA0suA5Q5y8kzY2y6YKrvbIUn69BCAiA==}
@@ -4686,6 +4692,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@electric-sql/pglite@0.5.1': {}
+
   '@electron/asar@3.4.1':
     dependencies:
       commander: 5.1.0
@@ -6453,8 +6461,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@types/pg@8.20.0)(@types/react@19.2.16)(pg@8.21.0)(react@19.2.7):
+  drizzle-orm@0.38.4(@electric-sql/pglite@0.5.1)(@types/pg@8.20.0)(@types/react@19.2.16)(pg@8.21.0)(react@19.2.7):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.1
       '@types/pg': 8.20.0
       '@types/react': 19.2.16
       pg: 8.21.0
