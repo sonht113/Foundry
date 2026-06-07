@@ -3,10 +3,10 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { GripVertical, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, PRIORITY_COLORS } from "../../lib/constants";
 import { useTaskStore } from "../../stores/taskStore";
 import { useUIStore } from "../../stores/uiStore";
 import { ConfirmModal } from "../common/ConfirmModal";
+import { QuickCreateModal } from "../task/QuickCreateModal";
 
 import { SortableTaskCard } from "./TaskCard";
 
@@ -56,13 +56,10 @@ const DEFAULT_IDS = new Set(["todo", "doing", "review", "done"]);
 
 export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id });
-  const createTask = useTaskStore((s) => s.createTask);
   const updateColumn = useTaskStore((s) => s.updateColumn);
   const deleteColumn = useTaskStore((s) => s.deleteColumn);
   const addToast = useUIStore((s) => s.addToast);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickTitle, setQuickTitle] = useState("");
-  const [quickPriority, setQuickPriority] = useState("medium");
+  const [showCreate, setShowCreate] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState(label);
@@ -83,27 +80,6 @@ export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }
   const borderColor = COLOR_BORDER[color] ?? COLOR_BORDER.zinc;
   const bgColor = COLOR_BG[color] ?? COLOR_BG.zinc;
   const isDefault = DEFAULT_IDS.has(id);
-
-  async function handleQuickAdd() {
-    if (!quickTitle.trim()) return;
-    try {
-      await createTask({
-        projectId,
-        title: quickTitle.trim(),
-        status: id,
-        priority: quickPriority,
-      });
-      resetQuickAdd();
-    } catch (e) {
-      addToast(`Failed: ${(e as Error).message}`, "error");
-    }
-  }
-
-  function resetQuickAdd() {
-    setQuickTitle("");
-    setQuickPriority("medium");
-    setShowQuickAdd(false);
-  }
 
   async function handleRename() {
     if (!renameInput.trim()) return;
@@ -206,69 +182,20 @@ export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }
           {tasks.map((task) => (
             <SortableTaskCard key={task.id} task={task} onClick={() => onTaskClick(task.id)} />
           ))}
-          {tasks.length === 0 && !showQuickAdd && (
+          {tasks.length === 0 && (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-10 text-zinc-400 transition-colors dark:border-zinc-800 dark:text-zinc-700">
               <GripVertical size={16} className="mb-1 opacity-40" />
               <span className="text-[11px]">Drop here</span>
             </div>
           )}
 
-          {showQuickAdd && (
-            <div className="rounded-lg border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900">
-              <input
-                className="mb-1.5 w-full rounded border border-zinc-300 bg-zinc-50 px-2 py-1.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                placeholder="Task title..."
-                value={quickTitle}
-                onChange={(e) => setQuickTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleQuickAdd();
-                  if (e.key === "Escape") resetQuickAdd();
-                }}
-                autoFocus
-              />
-              <div className="mb-2 flex gap-1">
-                {TASK_PRIORITIES.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setQuickPriority(p)}
-                    className={`cursor-pointer rounded px-1.5 py-0.5 text-[10px] font-medium transition-all ${
-                      quickPriority === p
-                        ? `${PRIORITY_COLORS[p].bg} ${PRIORITY_COLORS[p].text}`
-                        : "bg-zinc-100 text-zinc-400 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:hover:bg-zinc-700"
-                    }`}
-                  >
-                    {TASK_PRIORITY_LABELS[p]}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={handleQuickAdd}
-                  disabled={!quickTitle.trim()}
-                  className="flex-1 cursor-pointer rounded bg-indigo-600 px-2 py-1 text-[11px] text-white hover:bg-indigo-500 disabled:opacity-50"
-                >
-                  Add
-                </button>
-                <button
-                  onClick={resetQuickAdd}
-                  className="cursor-pointer rounded bg-zinc-200 px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!showQuickAdd && (
-            <button
-              onClick={() => setShowQuickAdd(true)}
-              className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:text-zinc-600 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-400"
-            >
-              <Plus size={12} />
-              Add task
-            </button>
-          )}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:text-zinc-600 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-400"
+          >
+            <Plus size={12} />
+            Add task
+          </button>
         </div>
       </SortableContext>
 
@@ -280,6 +207,14 @@ export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }
         message={`Delete "${label}" column? Tasks in this column will be moved to the default column.`}
         confirmLabel="Delete"
         loading={deleting}
+        variant="danger"
+      />
+
+      <QuickCreateModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        projectId={projectId}
+        status={id}
       />
     </div>
   );

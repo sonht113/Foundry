@@ -71,6 +71,18 @@ interface ElectronAPI {
     update: (id: string, content: string) => Promise<Note>;
     delete: (id: string) => Promise<{ success: boolean }>;
   };
+  conversation: {
+    list: (taskId: string) => Promise<Conversation[]>;
+    create: (data: {
+      taskId: string;
+      source: string;
+      author: string;
+      content: string;
+      externalId?: string;
+      externalUrl?: string;
+      createdAt?: string;
+    }) => Promise<Conversation>;
+  };
   setting: {
     get: (key: string) => Promise<string | null>;
     set: (key: string, value: string) => Promise<{ success: boolean }>;
@@ -145,6 +157,17 @@ interface Note {
   updatedAt: string;
 }
 
+interface Conversation {
+  id: string;
+  taskId: string;
+  source: string;
+  author: string;
+  content: string;
+  externalId: string | null;
+  externalUrl: string | null;
+  createdAt: string;
+}
+
 interface ShellOption {
   id: string;
   name: string;
@@ -157,4 +180,4 @@ declare global {
   }
 }
 
-export type { Project, Task, Column, Tag, Note, ShellOption };
+export type { Project, Task, Column, Tag, Note, Conversation, ShellOption };

@@ -51,3 +51,13 @@ export const searchTasksSchema = z.object({
   priority: z.enum(["low", "medium", "high", "critical"]).optional(),
   limit: z.number().min(1).max(100).default(50),
 });
+
+export const createConversationSchema = z.object({
+  taskId: z.string().min(1),
+  source: z.string().min(1),
+  author: z.string().min(1),
+  content: z.string().min(1, "Conversation content is required"),
+  externalId: z.string().optional(),
+  externalUrl: z.string().optional(),
+  createdAt: z.string().optional(),
+});

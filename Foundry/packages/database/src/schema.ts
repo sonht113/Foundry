@@ -83,3 +83,16 @@ export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
 });
+
+export const conversations = pgTable("conversations", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id")
+    .notNull()
+    .references(() => tasks.id, { onDelete: "cascade" }),
+  source: text("source").notNull(),
+  author: text("author").notNull(),
+  content: text("content").notNull(),
+  externalId: text("external_id"),
+  externalUrl: text("external_url"),
+  createdAt: text("created_at").notNull(),
+});

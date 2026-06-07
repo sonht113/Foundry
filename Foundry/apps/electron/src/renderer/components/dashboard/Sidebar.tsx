@@ -335,6 +335,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         message={`Are you sure you want to delete "${deleteTarget?.name}"? This will permanently delete all tasks and data in this project.`}
         confirmLabel="Delete"
         loading={deleting}
+        variant="danger"
       />
     </>
   );

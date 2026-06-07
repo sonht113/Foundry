@@ -79,6 +79,18 @@ const electronAPI = {
     update: (id: string, content: string) => ipcRenderer.invoke("note:update", id, content),
     delete: (id: string) => ipcRenderer.invoke("note:delete", id),
   },
+  conversation: {
+    list: (taskId: string) => ipcRenderer.invoke("conversation:list", taskId),
+    create: (data: {
+      taskId: string;
+      source: string;
+      author: string;
+      content: string;
+      externalId?: string;
+      externalUrl?: string;
+      createdAt?: string;
+    }) => ipcRenderer.invoke("conversation:create", data),
+  },
   setting: {
     get: (key: string) => ipcRenderer.invoke("setting:get", key),
     set: (key: string, value: string) => ipcRenderer.invoke("setting:set", key, value),
@@ -117,6 +129,9 @@ const electronAPI = {
       supabaseKey?: string;
     }) => ipcRenderer.invoke("config:setDatabase", db),
     testConnection: (databaseUrl: string) => ipcRenderer.invoke("config:testConnection", databaseUrl),
+  },
+  mcp: {
+    getConfig: () => ipcRenderer.invoke("mcp:getConfig"),
   },
 };
 

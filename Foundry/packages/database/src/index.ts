@@ -8,4 +8,5 @@ export { ColumnRepository } from "./repositories/column.repository";
 export { TaskRepository } from "./repositories/task.repository";
 export { TagRepository } from "./repositories/tag.repository";
 export { NoteRepository } from "./repositories/note.repository";
+export { ConversationRepository } from "./repositories/conversation.repository";
 export { SettingRepository } from "./repositories/setting.repository";

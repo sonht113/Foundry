@@ -7,4 +7,5 @@ export const generateId = {
   note: () => `note_${nanoid(12)}`,
   history: () => `hist_${nanoid(16)}`,
   column: () => `col_${nanoid(8)}`,
+  conversation: () => `conv_${nanoid(16)}`,
 };

@@ -1,12 +1,14 @@
-import { CalendarDays, Clock3, GripVertical, Paperclip, Play, StickyNote, User, X } from "lucide-react";
+import { CalendarDays, Clock3, GripVertical, MessageSquare, Paperclip, Play, StickyNote, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, PRIORITY_COLORS } from "../../lib/constants";
 import { formatSafeDate } from "../../lib/formatDate";
+import { useConversationStore } from "../../stores/conversationStore";
 import { useNoteStore } from "../../stores/noteStore";
 import { useTaskStore } from "../../stores/taskStore";
 import { useUIStore } from "../../stores/uiStore";
 import { Button } from "../common/Button";
+import { ConfirmModal } from "../common/ConfirmModal";
 
 interface HistoryRow {
   id: string;
@@ -30,10 +32,13 @@ export function TaskDetail() {
   const loadNotes = useNoteStore((s) => s.loadNotes);
   const createNote = useNoteStore((s) => s.createNote);
   const deleteNote = useNoteStore((s) => s.deleteNote);
+  const conversations = useConversationStore((s) => s.conversations);
+  const loadConversations = useConversationStore((s) => s.loadConversations);
   const addToast = useUIStore((s) => s.addToast);
 
   const task = tasks.find((t) => t.id === selectedTaskId);
   const taskNotes = selectedTaskId ? (notes[selectedTaskId] ?? []) : [];
+  const taskConversations = selectedTaskId ? (conversations[selectedTaskId] ?? []) : [];
   const [noteContent, setNoteContent] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
@@ -42,10 +47,13 @@ export function TaskDetail() {
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState("");
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (selectedTaskId) {
       loadNotes(selectedTaskId);
+      loadConversations(selectedTaskId);
       window.electronAPI.task
         .getHistory(selectedTaskId)
         .then(setHistory)
@@ -84,12 +92,15 @@ export function TaskDetail() {
   }
 
   async function handleDelete() {
-    if (!confirm("Delete this task?")) return;
+    setDeleting(true);
     try {
       await deleteTask(task!.id);
       addToast("Task deleted", "success");
+      setShowDeleteConfirm(false);
     } catch (e) {
       addToast((e as Error).message, "error");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -119,7 +130,12 @@ export function TaskDetail() {
     }
   }
 
-  function formatHistory(field: string, oldVal: string | null, newVal: string | null): string {
+  function formatHistory(
+    field: string,
+    oldVal: string | null,
+    newVal: string | null,
+    columns: { id: string; name: string }[],
+  ): string {
     const labels: Record<string, string> = {
       title: "Title",
       status: "Status",
@@ -133,6 +149,11 @@ export function TaskDetail() {
     };
     const label = labels[field] ?? field;
     if (field === "created") return `Task created`;
+    if (field === "status") {
+      const from = columns.find((c) => c.id === oldVal)?.name ?? oldVal ?? "—";
+      const to = columns.find((c) => c.id === newVal)?.name ?? newVal ?? "—";
+      return `${label}: ${from} → ${to}`;
+    }
     return `${label}: ${oldVal ?? "—"} → ${newVal ?? "—"}`;
   }
 
@@ -386,7 +407,7 @@ export function TaskDetail() {
                   <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-700" />
                   <div>
                     <span className="text-zinc-400 dark:text-zinc-400 dark:text-zinc-600">
-                      {formatHistory(h.field, h.old_value, h.new_value)}
+                      {formatHistory(h.field, h.old_value, h.new_value, columns)}
                     </span>
                     <span className="ml-2 text-zinc-400 dark:text-zinc-600">
                       {new Date(h.created_at).toLocaleTimeString([], {
@@ -449,16 +470,76 @@ export function TaskDetail() {
           </div>
         </div>
 
+        {/* Conversations */}
+        {taskConversations.length > 0 && (
+          <div>
+            <div className="mb-2 flex items-center gap-1.5">
+              <MessageSquare size={12} className="text-zinc-400 dark:text-zinc-600" />
+              <span className="text-[11px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-500">
+                Conversation
+              </span>
+              <span className="ml-auto text-[10px] text-zinc-400 dark:text-zinc-600">
+                {taskConversations.length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {taskConversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className="rounded-lg border border-zinc-200 bg-white p-2.5 dark:border-zinc-800 dark:bg-zinc-900"
+                >
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <span className="rounded bg-indigo-100 px-1 py-0.5 text-[9px] font-semibold text-indigo-600 uppercase dark:bg-indigo-900/30 dark:text-indigo-400">
+                      {conv.source}
+                    </span>
+                    <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      {conv.author}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 dark:text-zinc-600">
+                      · {formatSafeDate(conv.createdAt)}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap text-zinc-600 dark:text-zinc-300">
+                    {conv.content}
+                  </p>
+                  {conv.externalUrl && (
+                    <a
+                      href={conv.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-[10px] text-indigo-500 hover:underline dark:text-indigo-400"
+                    >
+                      View original
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Delete */}
         <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             className="cursor-pointer text-xs text-zinc-400 transition-colors hover:text-red-400 dark:text-zinc-600"
           >
             Delete task
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
+        loadingLabel="Deleting..."
+        variant="danger"
+      />
     </div>
   );
 }

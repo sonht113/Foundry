@@ -3,11 +3,13 @@ import path from "path";
 
 import type { SettingRepository } from "@foundry/database";
 import { getBackend } from "@foundry/database";
-import type { ProjectService, ColumnService, TaskService, TagService, NoteService } from "@foundry/domain";
+import type { ProjectService, ColumnService, TaskService, TagService, NoteService, ConversationService } from "@foundry/domain";
 import { app, ipcMain } from "electron";
 
 import { registerColumnHandlers } from "@/main/ipc/column.handler";
 import { registerConfigHandlers } from "@/main/ipc/config.handler";
+import { registerConversationHandlers } from "@/main/ipc/conversation.handler";
+import { registerMcpHandlers } from "@/main/ipc/mcp.handler";
 import { registerNoteHandlers } from "@/main/ipc/note.handler";
 import { registerProjectHandlers } from "@/main/ipc/project.handler";
 import { registerSettingHandlers } from "@/main/ipc/setting.handler";
@@ -23,6 +25,7 @@ const services = {
   task: null as TaskService | null,
   tag: null as TagService | null,
   note: null as NoteService | null,
+  conversation: null as ConversationService | null,
   setting: null as SettingRepository | null,
 };
 
@@ -32,6 +35,7 @@ export function setServices(s: {
   taskService: TaskService;
   tagService: TagService;
   noteService: NoteService;
+  conversationService: ConversationService;
   settingRepo: SettingRepository;
 }): void {
   services.project = s.projectService;
@@ -39,10 +43,13 @@ export function setServices(s: {
   services.task = s.taskService;
   services.tag = s.tagService;
   services.note = s.noteService;
+  services.conversation = s.conversationService;
   services.setting = s.settingRepo;
 }
 
 export function registerAllHandlers(): void {
+  registerMcpHandlers();
+
   registerProjectHandlers({
     list: (inc) => services.project!.list(inc),
     getById: (id) => services.project!.getById(id),
@@ -91,6 +98,11 @@ export function registerAllHandlers(): void {
     update: (id, content) => services.note!.update(id, content),
     remove: (id) => services.note!.remove(id),
   } as NoteService);
+
+  registerConversationHandlers({
+    list: (tid) => services.conversation!.list(tid),
+    create: (data) => services.conversation!.create(data),
+  } as ConversationService);
 
   registerSettingHandlers({
     get: (key) => services.setting!.get(key),

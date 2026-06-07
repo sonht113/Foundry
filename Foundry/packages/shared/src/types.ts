@@ -76,3 +76,14 @@ export interface TaskWithAll extends Task {
   tags: Tag[];
   notes: Note[];
 }
+
+export interface Conversation {
+  id: string;
+  taskId: string;
+  source: string;
+  author: string;
+  content: string;
+  externalId: string | null;
+  externalUrl: string | null;
+  createdAt: string;
+}

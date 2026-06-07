@@ -1,23 +1,48 @@
 #!/usr/bin/env node
 
+import fs from "fs";
 import path from "path";
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import dotenv from "dotenv";
+function resolveBundledModules(): void {
+  if (process.env.NODE_PATH) {
+    module.paths.unshift(process.env.NODE_PATH);
+  }
 
-import { createConnection, getQueryable, migrate } from "@foundry/database";
-import { ProjectRepository, ColumnRepository, TaskRepository, TagRepository, NoteRepository } from "@foundry/database";
-import { createProjectService, createColumnService, createTaskService, createTagService, createNoteService } from "@foundry/domain";
+  const scriptDir = __dirname;
+  if (scriptDir.includes("mcp-server") && scriptDir.includes("resources")) {
+    const appNodeModules = path.resolve(scriptDir, "..", "app", "node_modules");
+    if (fs.existsSync(appNodeModules)) {
+      module.paths.unshift(appNodeModules);
+    }
+  }
+}
 
-import { registerAITools } from "./tools/ai.tools";
-import { registerColumnTools } from "./tools/column.tools";
-import { registerNoteTools } from "./tools/note.tools";
-import { registerProjectTools } from "./tools/project.tools";
-import { registerTagTools } from "./tools/tag.tools";
-import { registerTaskTools } from "./tools/task.tools";
+resolveBundledModules();
 
-dotenv.config();
+function loadDotenv(): void {
+  const envPaths = [
+    path.resolve(__dirname, "..", "..", "..", "..", ".env"),
+    path.resolve(__dirname, "..", "..", ".env"),
+  ];
+  for (const envPath of envPaths) {
+    if (!fs.existsSync(envPath)) continue;
+    const content = fs.readFileSync(envPath, "utf-8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      const rawValue = trimmed.slice(eq + 1).trim();
+      const value = rawValue.replace(/^["']|["']$/g, "");
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
+loadDotenv();
 
 function parseArgs(): { dbUrl?: string; backend?: string } {
   const args = process.argv.slice(2);
@@ -47,6 +72,34 @@ async function main() {
     process.exit(1);
   }
 
+  const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
+  const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
+  const { createConnection, migrate } = await import("@foundry/database");
+  const {
+    ProjectRepository,
+    ColumnRepository,
+    TaskRepository,
+    TagRepository,
+    NoteRepository,
+    ConversationRepository,
+  } = await import("@foundry/database");
+  const {
+    createProjectService,
+    createColumnService,
+    createTaskService,
+    createTagService,
+    createNoteService,
+    createConversationService,
+  } = await import("@foundry/domain");
+
+  const { registerAITools } = await import("./tools/ai.tools");
+  const { registerColumnTools } = await import("./tools/column.tools");
+  const { registerNoteTools } = await import("./tools/note.tools");
+  const { registerProjectTools } = await import("./tools/project.tools");
+  const { registerTagTools } = await import("./tools/tag.tools");
+  const { registerTaskTools } = await import("./tools/task.tools");
+  const { registerConversationTools } = await import("./tools/conversation.tools");
+
   const { db, pool } = await createConnection(backend, dbUrl);
   await migrate(db);
 
@@ -55,17 +108,19 @@ async function main() {
   const taskRepo = new TaskRepository(pool);
   const tagRepo = new TagRepository(pool);
   const noteRepo = new NoteRepository(pool);
+  const conversationRepo = new ConversationRepository(pool);
 
   const projectService = createProjectService({ projectRepo });
   const columnService = createColumnService({ columnRepo });
   const taskService = createTaskService({ taskRepo });
   const tagService = createTagService({ tagRepo });
   const noteService = createNoteService({ noteRepo });
+  const conversationService = createConversationService({ conversationRepo });
 
   const server = new McpServer(
     {
       name: "foundry-mcp",
-      version: "0.2.0",
+      version: "0.1.0",
     },
     {
       capabilities: {
@@ -79,6 +134,7 @@ async function main() {
   registerTaskTools(server, taskService);
   registerTagTools(server, tagService);
   registerNoteTools(server, noteService);
+  registerConversationTools(server, conversationService);
   registerAITools(server, projectService, taskService);
 
   const transport = new StdioServerTransport();

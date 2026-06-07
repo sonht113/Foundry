@@ -1,8 +1,8 @@
 import path from "path";
 
 
-import { createConnection, migrate, ProjectRepository, ColumnRepository, TaskRepository, TagRepository, NoteRepository, SettingRepository } from "@foundry/database";
-import { createProjectService, createColumnService, createTaskService, createTagService, createNoteService } from "@foundry/domain";
+import { createConnection, migrate, ProjectRepository, ColumnRepository, TaskRepository, TagRepository, NoteRepository, ConversationRepository, SettingRepository } from "@foundry/database";
+import { createProjectService, createColumnService, createTaskService, createTagService, createNoteService, createConversationService } from "@foundry/domain";
 import dotenv from "dotenv";
 import { app, BrowserWindow, net, protocol } from "electron";
 
@@ -91,6 +91,7 @@ app.whenReady().then(async () => {
     const taskRepo = new TaskRepository(pool);
     const tagRepo = new TagRepository(pool);
     const noteRepo = new NoteRepository(pool);
+    const conversationRepo = new ConversationRepository(pool);
     const settingRepo = new SettingRepository(pool);
 
     const projectService = createProjectService({ projectRepo });
@@ -98,8 +99,9 @@ app.whenReady().then(async () => {
     const taskService = createTaskService({ taskRepo });
     const tagService = createTagService({ tagRepo });
     const noteService = createNoteService({ noteRepo });
+    const conversationService = createConversationService({ conversationRepo });
 
-    setServices({ projectService, columnService, taskService, tagService, noteService, settingRepo });
+    setServices({ projectService, columnService, taskService, tagService, noteService, conversationService, settingRepo });
 
     const backend = process.env.DATABASE_BACKEND || "supabase";
     console.log("[Foundry] Database connected successfully (backend: " + backend + ")");
