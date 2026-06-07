@@ -35,7 +35,10 @@ pnpm-debug.log*
 data/
 .better-sqlite3-nodejs.tmp
 
+.pglite/
+
 # Agent / AI personal config
 .agents/
 skills-lock.json
 opencode.json
+.understand-anything/

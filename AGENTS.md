@@ -49,6 +49,15 @@ npm run typecheck     # TypeScript check (needs NODE_OPTIONS="--max-old-space-si
 npm run mcp-server    # Start MCP server (reads DATABASE_URL from env)
 ```
 
+### Packaging (run from Foundry/apps/electron/)
+```bash
+npm run pack:win      # Windows NSIS installer
+npm run pack:mac      # macOS DMG (requires macOS host)
+npm run pack:linux    # Linux AppImage
+npm run pack:all      # All platforms at once
+```
+Output: `apps/electron/dist/installers/`
+
 ### Database Management
 ```bash
 # Generate migration from schema changes
@@ -72,16 +81,16 @@ The MCP server exposes 28 tools via stdio transport:
 
 ### MCP Client Integration
 
-The Foundry MCP server uses **stdio transport** and connects via Supabase PostgreSQL. Two methods to pass the database URL:
+The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and PGlite (local). Three methods to configure:
 
-**Method A — CLI argument (`--db-url`)**:
+**Method A — CLI argument (`--db-url`) for Supabase**:
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
       "args": [
-        "/absolute/path/to/Foundry/dist/mcp/server.js",
+        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
         "--db-url",
         "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
       ]
@@ -90,13 +99,13 @@ The Foundry MCP server uses **stdio transport** and connects via Supabase Postgr
 }
 ```
 
-**Method B — Environment variable (`DATABASE_URL`)**:
+**Method B — Environment variable (`DATABASE_URL`) for Supabase**:
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/dist/mcp/server.js"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
         "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
       }
@@ -105,19 +114,70 @@ The Foundry MCP server uses **stdio transport** and connects via Supabase Postgr
 }
 ```
 
-Build first: `npm run build` (from `Foundry/`). Replace `/absolute/path/to/Foundry` with your actual project path.
+**Method C — PGlite (local/offline, no Supabase required)**:
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
+        "--backend",
+        "pglite"
+      ]
+    }
+  }
+}
+```
+Optionally set `PGLITE_DATA_DIR` env var to persist data (default: in-memory, lost on restart):
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "pglite"],
+      "env": {
+        "PGLITE_DATA_DIR": "/path/to/data/dir"
+      }
+    }
+  }
+}
+```
+
+Build first: `npm run build` (from `Foundry/` — uses Turbo to build all packages including `@foundry/mcp-server`). Replace `/absolute/path/to/Foundry` with your actual project path.
 
 ---
 
 #### 1. OpenCode
 
-| Platform | Config File |
-|----------|-------------|
-| Windows  | `%APPDATA%\opencode\opencode.jsonc` |
-| macOS    | `~/.config/opencode/opencode.jsonc` |
-| Linux    | `~/.config/opencode/opencode.jsonc` |
+| Level | Config File |
+|-------|-------------|
+| Project | `opencode.json` (project root) |
+| Global | `~/.config/opencode/opencode.json` (macOS/Linux) or `%APPDATA%\opencode\opencode.json` (Windows) |
 
-Paste either Method A or Method B config into the `mcpServers` section. Restart OpenCode.
+Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as array, and `environment` for env vars:
+
+```json
+{
+  "mcp": {
+    "foundry": {
+      "type": "local",
+      "command": [
+        "node",
+        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
+        "--backend",
+        "pglite"
+      ],
+      "enabled": true,
+      "environment": {
+        "PGLITE_DATA_DIR": "./.pglite"
+      }
+    }
+  }
+}
+```
+
+Restart OpenCode.
 
 ---
 
@@ -129,7 +189,7 @@ Paste either Method A or Method B config into the `mcpServers` section. Restart 
 | macOS    | `~/.claude/settings.json` |
 | Linux    | `~/.claude/settings.json` |
 
-Paste the config (Method A or B) into the `mcpServers` section. Restart Claude Code.
+Paste the config (Method A, B, or C) into the `mcpServers` section. Restart Claude Code.
 
 ---
 
@@ -159,7 +219,7 @@ Alternatively, create a project-level `.cursor/mcp.json`:
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/dist/mcp/server.js"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
         "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
       }
@@ -184,7 +244,7 @@ Paste the config into the `servers` section:
   "servers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/dist/mcp/server.js"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
         "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
       }
@@ -205,7 +265,7 @@ Note: Copilot uses `"servers"` instead of `"mcpServers"` as the top-level key.
 | macOS    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 | Linux    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 
-Paste the config (Method A or B) into the `mcpServers` section. Restart Windsurf.
+Paste the config (Method A, B, or C) into the `mcpServers` section. Restart Windsurf.
 
 ---
 

@@ -30,7 +30,7 @@ Foundry/
 | Desktop shell | Electron 33 |
 | UI | React 19 + TypeScript + Vite 6 + TailwindCSS 4 |
 | State | Zustand 5 |
-| Database | Supabase (PostgreSQL) + Drizzle ORM + pg |
+| Database | Supabase (PostgreSQL) or PGlite (WASM, local) + Drizzle ORM + pg |
 | MCP | @modelcontextprotocol/sdk |
 | Drag-drop | @dnd-kit/core + @dnd-kit/sortable |
 | Packaging | electron-builder |
@@ -43,7 +43,9 @@ Foundry/
 
 - Node.js 18+
 - pnpm 10+
-- A [Supabase](https://supabase.com) project (free tier works)
+- Either:
+  - A [Supabase](https://supabase.com) project (free tier works), **or**
+  - PGlite (local/offline — no external services required)
 
 ### Setup
 
@@ -57,10 +59,15 @@ pnpm install
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env with your Supabase credentials:
+# For Supabase (cloud) — edit .env with your Supabase credentials:
+#   DATABASE_BACKEND=supabase
 #   DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
 #   SUPABASE_URL=https://[REF].supabase.co
 #   SUPABASE_ANON_KEY=your-anon-key-here
+#
+# For PGlite (local) — no credentials needed:
+#   DATABASE_BACKEND=pglite
+#   PGLITE_DATA_DIR=./.pglite
 
 # 4. Push database schema
 pnpm --filter @foundry/database run db:push
@@ -73,9 +80,11 @@ pnpm dev          # Electron + Vite dev mode
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Supabase PostgreSQL connection string |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_ANON_KEY` | Supabase anonymous API key |
+| `DATABASE_BACKEND` | `"supabase"` (default, cloud) or `"pglite"` (local/offline) |
+| `DATABASE_URL` | Supabase PostgreSQL connection string (required for `supabase` backend) |
+| `SUPABASE_URL` | Supabase project URL (required for `supabase` backend) |
+| `SUPABASE_ANON_KEY` | Supabase anonymous API key (required for `supabase` backend) |
+| `PGLITE_DATA_DIR` | Directory for PGlite persistent storage (default: in-memory, lost on restart) |
 
 ## Commands
 
@@ -86,7 +95,31 @@ pnpm lint          # ESLint check
 pnpm format        # Prettier format
 pnpm typecheck     # TypeScript check (NODE_OPTIONS="--max-old-space-size=4096" recommended)
 pnpm mcp-server    # Start MCP server standalone
+pnpm pack:win       # Package Windows installer (NSIS .exe) — from apps/electron/
+pnpm pack:mac       # Package macOS DMG (requires macOS)
+pnpm pack:linux     # Package Linux AppImage
+pnpm pack:all       # Package all platforms (requires macOS for DMG)
 ```
+
+### Packaging for Distribution
+
+```bash
+# From Foundry/apps/electron/:
+npm run pack:win       # Windows NSIS installer
+npm run pack:mac       # macOS DMG (requires macOS)
+npm run pack:linux     # Linux AppImage (can build from any platform)
+```
+
+Output goes to `apps/electron/dist/installers/`.
+
+### CI/CD (GitHub Actions)
+
+Push to `main` or trigger manually via Actions tab — builds artifacts for all 3 platforms:
+- **macOS**: `.dmg`
+- **Linux**: `.AppImage`
+- **Windows**: `.exe` (NSIS installer)
+
+Download artifacts from the workflow run summary page.
 
 ### Database Management
 
@@ -116,14 +149,15 @@ The MCP server exposes **28 tools** via stdio transport:
 
 ### Connecting AI Clients
 
-Build first: `pnpm build`, then add this to your MCP client config:
+The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite** (local). Build first: `pnpm build`, then configure your MCP client:
 
+**For Supabase — via `DATABASE_URL` env var:**
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/dist/mcp/server.js"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
         "DATABASE_URL": "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres"
       }
@@ -132,24 +166,53 @@ Build first: `pnpm build`, then add this to your MCP client config:
 }
 ```
 
+**For Supabase — via `--db-url` CLI arg:**
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
+        "--db-url",
+        "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres"
+      ]
+    }
+  }
+}
+```
+
+**For PGlite (local/offline, no Supabase required):**
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "pglite"],
+      "env": {
+        "PGLITE_DATA_DIR": "./.pglite"
+      }
+    }
+  }
+}
+```
+
 ### Client-Specific Config Paths
 
-| Client | Windows | macOS / Linux |
-|--------|---------|---------------|
-| **OpenCode** | `%APPDATA%\opencode\opencode.jsonc` | `~/.config/opencode/opencode.jsonc` |
-| **Claude Code** | `%APPDATA%\Claude Code\settings.json` | `~/.claude/settings.json` |
-| **Claude Desktop** | `%APPDATA%\Claude\claude_desktop_config.json` | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `~/.config/Claude/claude_desktop_config.json` (Linux) |
-| **Cursor** | *UI:* Settings → MCP → Add server | Same + `.cursor/mcp.json` per project |
-| **GitHub Copilot** | `%USERPROFILE%\.copilot\mcp.json` | `~/.copilot/mcp.json` |
-| **Windsurf** | `%APPDATA%\windsurf\mcp.json` | `~/.windsurf/mcp.json` |
-
-> Copilot uses `"servers"` instead of `"mcpServers"` as the top-level key.
+| Client | Windows | macOS / Linux | Notes |
+|--------|---------|---------------|-------|
+| **OpenCode** | `%APPDATA%\opencode\opencode.json` | `~/.config/opencode/opencode.json` | Or `opencode.json` in project root. Uses `mcp` key with `type: "local"` |
+| **Claude Code** | `%APPDATA%\Claude Code\settings.json` | `~/.claude/settings.json` | Standard `mcpServers` format |
+| **Claude Desktop** | `%APPDATA%\Claude\claude_desktop_config.json` | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `~/.config/Claude/claude_desktop_config.json` (Linux) | Standard `mcpServers` format |
+| **Cursor** | *UI:* Settings → MCP → Add server | Same + `.cursor/mcp.json` per project | Standard `mcpServers` format |
+| **GitHub Copilot** | `%USERPROFILE%\.copilot\mcp.json` | `~/.copilot/mcp.json` | Uses `"servers"` key instead of `"mcpServers"` |
+| **Windsurf** | `%APPDATA%\windsurf\mcp.json` | `~/.windsurf/mcp.json` | Standard `mcpServers` format |
 
 For detailed setup per client, see [AGENTS.md](AGENTS.md).
 
 ## Architecture
 
-- **Cloud-first**: Supabase PostgreSQL as source of truth; requires network connectivity
+- **Cloud-first with local fallback**: Supabase PostgreSQL as source of truth; PGlite (WASM PostgreSQL) for local/offline development
 - **Process model**: Electron main process hosts services; renderer talks via IPC (contextBridge); MCP server runs as stdio child process
 - **ID format**: nanoid with prefixes (`proj_`, `task_`, `tag_`, `note_`, `hist_`)
 - **Error handling**: Zod validation + custom `AppError` hierarchy + Zustand error states + toast notifications
