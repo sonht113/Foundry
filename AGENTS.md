@@ -81,7 +81,12 @@ The MCP server exposes 28 tools via stdio transport:
 
 ### MCP Client Integration
 
-The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and PGlite (local). Three methods to configure:
+The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and PGlite (local). Four methods to configure:
+
+> **Development vs Installed:** In development (source checkout), the server path is `apps/mcp-server/dist/server.js`.
+> When Foundry is installed as a packaged app, the MCP server is bundled at `resources/mcp-server/server.js`
+> and dependencies are at `resources/app/node_modules`. Open the app and go to
+> **Settings → MCP Server** to see and copy the exact config with correct paths for your environment.
 
 **Method A — CLI argument (`--db-url`) for Supabase**:
 ```json
@@ -144,6 +149,33 @@ Optionally set `PGLITE_DATA_DIR` env var to persist data (default: in-memory, lo
 }
 ```
 
+**Method D — Packaged App / Installed (no source code required)**:
+
+When Foundry is installed via NSIS/DMG/AppImage, the MCP server is bundled inside the app.
+Open **Settings → MCP Server** to copy the exact config. On Windows, it looks like:
+
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": [
+        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
+        "--backend",
+        "pglite"
+      ],
+      "env": {
+        "PGLITE_DATA_DIR": "%APPDATA%\\Foundry\\pglite-data",
+        "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
+      }
+    }
+  }
+}
+```
+
+For Supabase (installed), replace `--backend pglite` with `DATABASE_URL` in the `env` section.
+> Paths vary by OS and install location. Always use the config from **Settings → MCP Server**.
+
 Build first: `npm run build` (from `Foundry/` — uses Turbo to build all packages including `@foundry/mcp-server`). Replace `/absolute/path/to/Foundry` with your actual project path.
 
 ---
@@ -179,6 +211,8 @@ Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as 
 
 Restart OpenCode.
 
+> For installed Foundry, use Method D (see **Settings → MCP Server** for exact paths).
+
 ---
 
 #### 2. Claude Code (CLI)
@@ -189,7 +223,7 @@ Restart OpenCode.
 | macOS    | `~/.claude/settings.json` |
 | Linux    | `~/.claude/settings.json` |
 
-Paste the config (Method A, B, or C) into the `mcpServers` section. Restart Claude Code.
+Paste the config (Method A, B, C, or D) into the `mcpServers` section. Restart Claude Code.
 
 ---
 
@@ -265,7 +299,7 @@ Note: Copilot uses `"servers"` instead of `"mcpServers"` as the top-level key.
 | macOS    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 | Linux    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 
-Paste the config (Method A, B, or C) into the `mcpServers` section. Restart Windsurf.
+Paste the config (Method A, B, C, or D) into the `mcpServers` section. Restart Windsurf.
 
 ---
 

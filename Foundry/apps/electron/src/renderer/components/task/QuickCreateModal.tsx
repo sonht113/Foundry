@@ -11,9 +11,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   projectId: string;
+  status?: string;
 }
 
-export function QuickCreateModal({ open, onClose, projectId }: Props) {
+export function QuickCreateModal({ open, onClose, projectId, status }: Props) {
   const createTask = useTaskStore((s) => s.createTask);
   const addToast = useUIStore((s) => s.addToast);
   const [title, setTitle] = useState("");
@@ -46,6 +47,7 @@ export function QuickCreateModal({ open, onClose, projectId }: Props) {
         startDate: startDate || null,
         endDate: endDate || null,
         estimateHours: estimateHours ? Number(estimateHours) : 0,
+        ...(status ? { status } : {}),
       });
       addToast(`Task "${title}" created`, "success");
       resetForm();

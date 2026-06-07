@@ -153,9 +153,16 @@ The MCP server exposes **28 tools** via stdio transport:
 
 ### Connecting AI Clients
 
-The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite** (local). Build first: `pnpm build`, then configure your MCP client:
+The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite** (local).
 
-**For Supabase — via `DATABASE_URL` env var:**
+> **Development vs Installed:** When running from source, the server path is `apps/mcp-server/dist/server.js`.
+> When Foundry is installed (via NSIS/DMG/AppImage), the MCP server is bundled at `resources/mcp-server/server.js`
+> and dependencies live at `resources/app/node_modules`. Open the app and go to
+> **Settings → MCP Server** to see and copy the exact config for your environment.
+
+Build first: `pnpm build`, then configure your MCP client:
+
+**Method A — Supabase via `DATABASE_URL` env var (dev):**
 ```json
 {
   "mcpServers": {
@@ -170,7 +177,7 @@ The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite*
 }
 ```
 
-**For Supabase — via `--db-url` CLI arg:**
+**Method B — Supabase via `--db-url` CLI arg (dev):**
 ```json
 {
   "mcpServers": {
@@ -186,7 +193,7 @@ The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite*
 }
 ```
 
-**For PGlite (local/offline, no Supabase required):**
+**Method C — PGlite local/offline (dev):**
 ```json
 {
   "mcpServers": {
@@ -200,6 +207,27 @@ The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite*
   }
 }
 ```
+
+**Method D — PGlite (installed app, Windows example):**
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": [
+        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
+        "--backend",
+        "pglite"
+      ],
+      "env": {
+        "PGLITE_DATA_DIR": "%APPDATA%\\Foundry\\pglite-data",
+        "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
+      }
+    }
+  }
+}
+```
+> Paths vary by OS. Open **Settings → MCP Server** in the Foundry app to get the exact config.
 
 ### Client-Specific Config Paths
 

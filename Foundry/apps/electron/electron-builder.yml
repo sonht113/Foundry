@@ -7,6 +7,11 @@ files:
   - dist/preload/**/*
   - dist/renderer/**/*
   - package.json
+extraResources:
+  - from: ../mcp-server/dist
+    to: mcp-server
+    filter:
+      - "**/*"
 asar: false
 npmRebuild: false
 buildDependenciesFromSource: false
