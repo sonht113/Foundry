@@ -102,6 +102,22 @@ const electronAPI = {
       ipcRenderer.removeAllListeners("terminal:exit");
     },
   },
+  db: {
+    getBackend: () => ipcRenderer.invoke("db:getBackend"),
+    switchBackend: (backend: "supabase" | "pglite") =>
+      ipcRenderer.invoke("db:switchBackend", backend),
+    restartApp: () => ipcRenderer.invoke("db:restartApp"),
+  },
+  config: {
+    get: () => ipcRenderer.invoke("config:get"),
+    setDatabase: (db: {
+      backend: "supabase" | "pglite";
+      databaseUrl?: string;
+      supabaseUrl?: string;
+      supabaseKey?: string;
+    }) => ipcRenderer.invoke("config:setDatabase", db),
+    testConnection: (databaseUrl: string) => ipcRenderer.invoke("config:testConnection", databaseUrl),
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);
