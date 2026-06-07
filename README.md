@@ -2,6 +2,14 @@
 
 An AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on Supabase (PostgreSQL) accessed through a shared service layer.
 
+## Screenshots
+
+<div align="center">
+  <img src="public/overview.png" alt="Project Overview" width="30%" />
+  <img src="public/kanban.png" alt="Kanban Board" width="30%" />
+  <img src="public/settings.png" alt="Settings" width="30%" />
+</div>
+
 ## Features
 
 - **Kanban board** with drag-and-drop (dnd-kit) for task management
@@ -95,10 +103,6 @@ pnpm lint          # ESLint check
 pnpm format        # Prettier format
 pnpm typecheck     # TypeScript check (NODE_OPTIONS="--max-old-space-size=4096" recommended)
 pnpm mcp-server    # Start MCP server standalone
-pnpm pack:win       # Package Windows installer (NSIS .exe) — from apps/electron/
-pnpm pack:mac       # Package macOS DMG (requires macOS)
-pnpm pack:linux     # Package Linux AppImage
-pnpm pack:all       # Package all platforms (requires macOS for DMG)
 ```
 
 ### Packaging for Distribution
