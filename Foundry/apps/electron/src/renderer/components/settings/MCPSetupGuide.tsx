@@ -3,11 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useUIStore } from "../../stores/uiStore";
 
-const DB_URL_PLACEHOLDER =
-  "postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxxx.supabase.co:5432/postgres";
-
 type Platform = "win32" | "darwin" | "linux";
-type Backend = "sqlite" | "supabase";
 
 interface PlatformInfo {
   label: string;
@@ -83,22 +79,17 @@ interface BaseConfig {
   env: Record<string, string>;
 }
 
-function buildBaseConfig(mcp: McpServerConfig | null, backend: Backend): BaseConfig {
+function buildBaseConfig(mcp: McpServerConfig | null): BaseConfig {
   const serverPath =
     mcp?.serverPath ?? "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js";
   const dataDir = mcp?.dataDir ?? "./foundry.db";
   const args = [serverPath];
-  if (backend === "sqlite") {
-    args.push("--backend", "sqlite");
-  }
   const env: Record<string, string> = {};
-  if (backend === "sqlite") {
-    env.SQLITE_DATA_DIR = dataDir;
-  } else {
-    env.DATABASE_URL = DB_URL_PLACEHOLDER;
-  }
   if (mcp?.nodePath) {
     env.NODE_PATH = mcp.nodePath;
+  }
+  if (dataDir) {
+    env.SQLITE_DATA_DIR = dataDir;
   }
   return { command: "node", args, env };
 }
@@ -162,7 +153,6 @@ function detectPlatform(): Platform {
 export function MCPSetupGuide() {
   const addToast = useUIStore((s) => s.addToast);
   const [platform, setPlatform] = useState<Platform>(detectPlatform);
-  const [backend, setBackend] = useState<Backend>("sqlite");
   const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
   const [copied, setCopied] = useState("");
 
@@ -195,8 +185,8 @@ export function MCPSetupGuide() {
   const info = PLATFORMS[platform];
 
   const baseConfig = useMemo(
-    () => buildBaseConfig(mcpConfig, backend),
-    [mcpConfig, backend]
+    () => buildBaseConfig(mcpConfig),
+    [mcpConfig]
   );
 
   const openCodeConfigStr = useMemo(() => toOpenCodeJson(baseConfig), [baseConfig]);
@@ -213,11 +203,6 @@ export function MCPSetupGuide() {
       setTimeout(() => setCopied(""), 2000);
     });
   }
-
-  const standardPreview =
-    backend === "sqlite"
-      ? "SQLite — local database, no Supabase required"
-      : "Supabase — set DATABASE_URL with your connection string";
 
   return (
     <div className="space-y-6">
@@ -254,7 +239,7 @@ export function MCPSetupGuide() {
           <div className="mb-3 flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500" />
             <span className="text-xs text-zinc-500">
-              stdio transport — supports both backends
+              stdio transport — SQLite backend
             </span>
           </div>
           <div className="space-y-3">
@@ -295,65 +280,10 @@ export function MCPSetupGuide() {
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-800 dark:text-zinc-200">Backend</h3>
-        <div className="flex gap-1 rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <button
-            onClick={() => setBackend("sqlite")}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              backend === "sqlite"
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-400"
-            }`}
-          >
-            SQLite (Local)
-          </button>
-          <button
-            onClick={() => setBackend("supabase")}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              backend === "supabase"
-                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-400"
-            }`}
-          >
-            Supabase (Cloud)
-          </button>
-        </div>
-        {backend === "supabase" ? (
-          <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <label className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
-              Supabase Connection String
-            </label>
-            <div className="mt-2 flex items-center gap-2">
-              <code className="flex-1 truncate rounded-md bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-                {DB_URL_PLACEHOLDER}
-              </code>
-              <button
-                onClick={() => copyConfig("url", DB_URL_PLACEHOLDER)}
-                className="shrink-0 cursor-pointer rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                title="Copy connection string"
-              >
-                {copied === "url" ? (
-                  <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
-                ) : (
-                  <Copy size={14} />
-                )}
-              </button>
-            </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-zinc-400">
-              Get your string from{" "}
-              <strong>Supabase Dashboard → Settings → Database → Connection string</strong>. Replace{" "}
-              <code className="text-[10px]">YOUR_PASSWORD</code> and{" "}
-              <code className="text-[10px]">xxxxxxxxxxxxx</code>.
-            </p>
-          </div>
-        ) : null}
-      </div>
-
-      <div>
         <h3 className="mb-3 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           Config Preview
         </h3>
-        <p className="mb-2 text-xs text-zinc-500">{standardPreview}</p>
+        <p className="mb-2 text-xs text-zinc-500">SQLite — local database, no credentials required</p>
         <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">

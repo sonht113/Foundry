@@ -17,7 +17,7 @@ interface UIState {
   sidebarCollapsed: boolean;
   settingsOpen: boolean;
   terminalOpen: boolean;
-  dbBackend: "supabase" | "sqlite" | null;
+  dbBackend: "sqlite" | null;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -29,7 +29,7 @@ interface UIState {
   setSettingsOpen: (open: boolean) => void;
   setTerminalOpen: (open: boolean) => void;
   toggleTerminal: () => void;
-  setDbBackend: (backend: "supabase" | "sqlite") => void;
+  setDbBackend: (backend: "sqlite") => void;
 }
 
 let toastId = 0;

@@ -1,7 +1,6 @@
-export { createConnection, getPool, getQueryable, getDb, getBackend, closeConnection } from "./connection";
-export type { DatabaseInstance, Queryable } from "./connection";
-export { migrate, drizzleRunMigrations } from "./migrate";
-export * from "./schema";
+export { createConnection, getQueryable, closeConnection } from "./connection";
+export type { Queryable } from "./connection";
+export { migrate } from "./migrate";
 
 export { ProjectRepository } from "./repositories/project.repository";
 export { ColumnRepository } from "./repositories/column.repository";

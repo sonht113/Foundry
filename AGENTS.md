@@ -7,7 +7,7 @@ Two reference docs define the plan:
 - `AI_NATIVE_TASK_MANAGER_TECHNICAL_DESIGN.md` — architecture, DB schema, flows, component tree, MCP protocol
 
 ## Core Concept
-AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on Supabase (PostgreSQL) accessed through the same service layer.
+AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on SQLite (sql.js) accessed through the same service layer.
 
 ## Stack
 | Layer | Technology |
@@ -15,7 +15,7 @@ AI-native task manager where **both humans (UI) and AI agents (MCP) are first-cl
 | Desktop shell | Electron |
 | UI | React 19 + TypeScript + Vite + TailwindCSS 4 |
 | State | Zustand 5 |
-| DB | Supabase (PostgreSQL) + Drizzle ORM + pg |
+| DB | SQLite (sql.js) — raw SQL via pool.query |
 | MCP | @modelcontextprotocol/sdk |
 | Drag-drop | dnd-kit |
 | Packaging | electron-builder |
@@ -23,19 +23,22 @@ AI-native task manager where **both humans (UI) and AI agents (MCP) are first-cl
 | Import alias | @/ (tsc-alias for main, Vite for renderer) |
 
 ## Key Architecture Decisions
-- **Cloud-first**: Supabase PostgreSQL as source of truth; SQLite was replaced due to native module issues
+- **Local-first**: SQLite (sql.js) as the database backend — fully offline, no cloud required
 - **Process model**: Electron main process hosts services; renderer talks via IPC (contextBridge); MCP server runs as stdio child process
-- **Database**: Connection via `DATABASE_URL` env variable (Supabase PostgreSQL connection string)
-- **Offline**: not supported; requires network connectivity for all operations
+- **Database**: Data persisted to disk automatically. Default path:
+  - Windows: `%APPDATA%\Foundry\foundry.db`
+  - macOS: `~/Library/Application Support/Foundry/foundry.db`
+  - Linux: `~/.local/share/Foundry/foundry.db`
+- **Offline**: fully supported; no network connectivity required
 - **ID format**: nanoid with prefixes (`proj_`, `task_`, `tag_`, `note_`, `hist_`)
 - **Error handling**: Zod validation + custom `AppError` hierarchy + Zustand error states + toast notifications
 
 ## Environment Setup
-Copy `.env.example` to `.env` and fill in your Supabase project values:
+No environment variables required — SQLite database auto-creates at the default path.
+
+Optionally override with `SQLITE_DATA_DIR` to use a custom database file path:
 ```bash
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
-SUPABASE_URL=https://[PROJECT-REF].supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
+SQLITE_DATA_DIR=/custom/path/to/foundry.db
 ```
 
 ## Commands (run from Foundry/)
@@ -46,7 +49,7 @@ npm run lint          # ESLint check
 npm run lint:fix      # ESLint auto-fix + import sorting
 npm run format        # Prettier format
 npm run typecheck     # TypeScript check (needs NODE_OPTIONS="--max-old-space-size=4096")
-npm run mcp-server    # Start MCP server (reads DATABASE_URL from env)
+npm run mcp-server    # Start MCP server
 ```
 
 ### Packaging (run from Foundry/apps/electron/)
@@ -57,18 +60,6 @@ npm run pack:linux    # Linux AppImage
 npm run pack:all      # All platforms at once
 ```
 Output: `apps/electron/dist/installers/`
-
-### Database Management
-```bash
-# Generate migration from schema changes
-pnpm --filter @foundry/database run db:generate
-
-# Push schema directly to database (development)
-pnpm --filter @foundry/database run db:push
-
-# Run pending migrations
-pnpm --filter @foundry/database run db:migrate
-```
 
 ## MCP Server (Phase 2)
 The MCP server exposes 28 tools via stdio transport:
@@ -81,30 +72,26 @@ The MCP server exposes 28 tools via stdio transport:
 
 ### MCP Client Integration
 
-The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and SQLite (local). Four methods to configure:
+The Foundry MCP server uses **stdio transport** with **SQLite** backend.
 
 > **Development vs Installed:** In development (source checkout), the server path is `apps/mcp-server/dist/server.js`.
 > When Foundry is installed as a packaged app, the MCP server is bundled at `resources/mcp-server/server.js`
 > and dependencies are at `resources/app/node_modules`. Open the app and go to
 > **Settings → MCP Server** to see and copy the exact config with correct paths for your environment.
 
-**Method A — CLI argument (`--db-url`) for Supabase**:
+**Development (source checkout):**
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": [
-        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
-        "--db-url",
-        "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-      ]
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"]
     }
   }
 }
 ```
 
-**Method B — Environment variable (`DATABASE_URL`) for Supabase**:
+Optionally set a custom SQLite path:
 ```json
 {
   "mcpServers": {
@@ -112,68 +99,29 @@ The Foundry MCP server uses **stdio transport** and supports two backends: Supab
       "command": "node",
       "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
-        "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+        "SQLITE_DATA_DIR": "/path/to/foundry.db"
       }
     }
   }
 }
 ```
 
-**Method C — SQLite (local)/offline, no Supabase required)**:
+**Installed (Windows example):**
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
       "args": [
-        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
-        "--backend",
-        "sqlite"
-      ]
-    }
-  }
-}
-```
-Optionally set `SQLITE_DATA_DIR` env var to persist data (default: in-memory, lost on restart):
-```json
-{
-  "mcpServers": {
-    "foundry": {
-      "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "sqlite"],
-      "env": {
-        "SQLITE_DATA_DIR": "/path/to/data/dir"
-      }
-    }
-  }
-}
-```
-
-**Method D — Packaged App / Installed (no source code required)**:
-
-When Foundry is installed via NSIS/DMG/AppImage, the MCP server is bundled inside the app.
-Open **Settings → MCP Server** to copy the exact config. On Windows, it looks like:
-
-```json
-{
-  "mcpServers": {
-    "foundry": {
-      "command": "node",
-      "args": [
-        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
-        "--backend",
-        "sqlite"
+        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js"
       ],
       "env": {
-        "SQLITE_DATA_DIR": "%APPDATA%\\Foundry\\foundry.db",
         "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
       }
     }
   }
 }
 ```
-
-For Supabase (installed), replace `--backend sqlite` with `DATABASE_URL` in the `env` section.
 > Paths vary by OS and install location. Always use the config from **Settings → MCP Server**.
 
 Build first: `npm run build` (from `Foundry/` — uses Turbo to build all packages including `@foundry/mcp-server`). Replace `/absolute/path/to/Foundry` with your actual project path.
@@ -187,7 +135,7 @@ Build first: `npm run build` (from `Foundry/` — uses Turbo to build all packag
 | Project | `opencode.json` (project root) |
 | Global | `~/.config/opencode/opencode.json` (macOS/Linux) or `%APPDATA%\opencode\opencode.json` (Windows) |
 
-Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as array, and `environment` for env vars:
+Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as array:
 
 ```json
 {
@@ -196,14 +144,9 @@ Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as 
       "type": "local",
       "command": [
         "node",
-        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
-        "--backend",
-        "sqlite"
+        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"
       ],
-      "enabled": true,
-      "environment": {
-        "SQLITE_DATA_DIR": "./foundry.db"
-      }
+      "enabled": true
     }
   }
 }
@@ -211,7 +154,7 @@ Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as 
 
 Restart OpenCode.
 
-> For installed Foundry, use Method D (see **Settings → MCP Server** for exact paths).
+> For installed Foundry, use **Settings → MCP Server** for exact paths.
 
 ---
 
@@ -223,7 +166,7 @@ Restart OpenCode.
 | macOS    | `~/.claude/settings.json` |
 | Linux    | `~/.claude/settings.json` |
 
-Paste the config (Method A, B, C, or D) into the `mcpServers` section. Restart Claude Code.
+Paste the config into the `mcpServers` section. Restart Claude Code.
 
 ---
 
@@ -253,10 +196,7 @@ Alternatively, create a project-level `.cursor/mcp.json`:
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
-      "env": {
-        "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-      }
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"]
     }
   }
 }
@@ -278,10 +218,7 @@ Paste the config into the `servers` section:
   "servers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
-      "env": {
-        "DATABASE_URL": "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-      }
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"]
     }
   }
 }
@@ -299,7 +236,7 @@ Note: Copilot uses `"servers"` instead of `"mcpServers"` as the top-level key.
 | macOS    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 | Linux    | `~/.windsurf/mcp.json` or `~/.config/windsurf/mcp.json` |
 
-Paste the config (Method A, B, C, or D) into the `mcpServers` section. Restart Windsurf.
+Paste the config into the `mcpServers` section. Restart Windsurf.
 
 ---
 
@@ -311,11 +248,10 @@ Works with any MCP-compatible stdio client. Place the config JSON in your client
 - `frontend-design` — production-grade UI components
 - `mcp-builder` — MCP server development
 - `playwright-interactive` — Electron/UI debugging
-- `supabase` — Supabase platform guidance
 
 ## Phase Roadmap (from PRD)
 1. **Phase 1** (done): Electron + SQLite + Project/Task CRUD + dashboard UI
-2. **Phase 2** (done): MCP server + 28 tools + Supabase migration + OpenCode integration
+2. **Phase 2** (done): MCP server + 28 tools + OpenCode integration
 3. **Phase 3** (3wk): AI roadmap generator, sprint planner, task breakdown
 4. **Phase 4** (4wk): Real-time sync, team workspace, multi-agent support
 
@@ -324,7 +260,8 @@ Works with any MCP-compatible stdio client. Place the config JSON in your client
 - Task statuses: `todo` → `doing` → `review` → `done`
 - Priorities: `low`, `medium`, `high`, `critical`
 - MCP tool names: snake_case (e.g. `create_task`, `generate_tasks_from_prompt`)
-- All DB queries use async `pg` Pool with Drizzle ORM schema definitions
+- All DB queries use raw SQL via `pool.query()` (parameterized with `$N` placeholders)
+- SQL `$N` placeholders are converted to `?` for SQLite compatibility
 - Optimistic UI updates for drag-and-drop; revert on IPC failure
 - Import ordering: builtin → external → `@/` internal → relative (enforced by ESLint)
 - TSC memory: MCP SDK types are heavy; use `NODE_OPTIONS="--max-old-space-size=4096"` for `typecheck`

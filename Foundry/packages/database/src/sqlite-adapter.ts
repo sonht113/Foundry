@@ -1,9 +1,8 @@
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
+import { homedir } from "os";
 import path from "path";
 
 import initSqlJs, { type Database as SqlJsDatabase } from "sql.js";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import type * as schema from "./schema";
 
 export interface QueryResult<T = unknown> {
   rows: T[];
@@ -20,14 +19,32 @@ export interface Queryable {
 }
 
 export interface DatabaseInstance {
-  backend: "sqlite";
-  db: NodePgDatabase<typeof schema> | null;
   pool: Queryable;
   close(): Promise<void>;
 }
 
-function convertParams(sql: string): string {
-  return sql.replace(/\$(\d+)/g, "?");
+function convertParams(sql: string, params?: unknown[]): { sql: string; params: unknown[] } {
+  if (!params || params.length === 0) return { sql, params: [] };
+  const expanded: unknown[] = [];
+  const converted = sql.replace(/\$(\d+)/g, (_match, num) => {
+    expanded.push(params[parseInt(num, 10) - 1]);
+    return "?";
+  });
+  return { sql: converted, params: expanded };
+}
+
+const WRITE_COMMANDS = ["INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "REPLACE"];
+
+function getDefaultDataDir(): string {
+  const platform = process.platform;
+  if (platform === "win32") {
+    const appData = process.env.APPDATA || path.join(homedir(), "AppData", "Roaming");
+    return path.join(appData, "Foundry", "foundry.db");
+  }
+  if (platform === "darwin") {
+    return path.join(homedir(), "Library", "Application Support", "Foundry", "foundry.db");
+  }
+  return path.join(homedir(), ".local", "share", "Foundry", "foundry.db");
 }
 
 const CREATE_TABLES_SQL = `
@@ -113,15 +130,20 @@ CREATE TABLE IF NOT EXISTS "settings" (
 export async function createSqliteConnection(dataDir?: string): Promise<DatabaseInstance> {
   const SQL = await initSqlJs();
 
+  const resolvedDataDir = dataDir || getDefaultDataDir();
+
   let db: SqlJsDatabase;
-  if (dataDir) {
+  try {
+    const buffer = readFileSync(resolvedDataDir);
+    db = new SQL.Database(buffer);
+  } catch {
+    const dir = path.dirname(resolvedDataDir);
     try {
-      const buffer = readFileSync(dataDir);
-      db = new SQL.Database(buffer);
+      const { mkdirSync } = await import("fs");
+      mkdirSync(dir, { recursive: true });
     } catch {
-      db = new SQL.Database();
+      // ignore if dir already exists
     }
-  } else {
     db = new SQL.Database();
   }
 
@@ -130,17 +152,32 @@ export async function createSqliteConnection(dataDir?: string): Promise<Database
 
   db.run(CREATE_TABLES_SQL);
 
+  function maybeSave(sql: string) {
+    if (!resolvedDataDir) return;
+    const upperSql = sql.trim().toUpperCase();
+    const isWrite = WRITE_COMMANDS.some((cmd) => upperSql.startsWith(cmd));
+    if (isWrite) {
+      try {
+        const data = db.export();
+        writeFileSync(resolvedDataDir, Buffer.from(data));
+      } catch {
+        // best-effort save
+      }
+    }
+  }
+
   function query<T = unknown>(sql: string, params?: unknown[]): QueryResult<T> {
-    const convertedSql = convertParams(sql);
+    const { sql: convertedSql, params: expandedParams } = convertParams(sql, params);
     const stmt = db.prepare(convertedSql);
-    if (params && params.length > 0) {
-      stmt.bind(params as any);
+    if (expandedParams.length > 0) {
+      stmt.bind(expandedParams as any);
     }
     const rows: T[] = [];
     while (stmt.step()) {
       rows.push(stmt.getAsObject() as T);
     }
     stmt.free();
+    maybeSave(sql);
     return { rows };
   }
 
@@ -153,10 +190,14 @@ export async function createSqliteConnection(dataDir?: string): Promise<Database
   };
 
   return {
-    backend: "sqlite",
-    db: null,
     pool,
     close: async () => {
+      try {
+        const data = db.export();
+        writeFileSync(resolvedDataDir, Buffer.from(data));
+      } catch {
+        // best-effort save
+      }
       db.close();
     },
   };

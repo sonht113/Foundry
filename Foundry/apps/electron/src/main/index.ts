@@ -3,40 +3,9 @@ import path from "path";
 
 import { createConnection, migrate, ProjectRepository, ColumnRepository, TaskRepository, TagRepository, NoteRepository, ConversationRepository, SettingRepository } from "@foundry/database";
 import { createProjectService, createColumnService, createTaskService, createTagService, createNoteService, createConversationService } from "@foundry/domain";
-import dotenv from "dotenv";
 import { app, BrowserWindow, net, protocol } from "electron";
 
 import { registerAllHandlers, registerEarlyHandlers, registerTerminalHandlers, setServices } from "@/main/ipc";
-import { applyDatabaseConfig, loadConfig } from "@/main/ipc/config.handler";
-
-dotenv.config({ path: path.join(__dirname, "..", "..", "..", "..", ".env") });
-
-// Also try the packaged app path: resources/app/.env
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: path.join(__dirname, "..", "..", ".env") });
-}
-
-// Load persistent config from userData — overrides .env if present
-const savedConfig = loadConfig();
-if (savedConfig.database?.databaseUrl || savedConfig.database?.backend === "sqlite") {
-  applyDatabaseConfig(savedConfig.database);
-}
-
-// If no Supabase URL is configured, auto-fallback to SQLite
-if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "sqlite") {
-  process.env.DATABASE_BACKEND = "sqlite";
-  console.log("[Foundry] No DATABASE_URL found — defaulting to SQLite backend");
-}
-
-// SQLite data directory fallback — use OS user data dir for persistence
-function resolveLocalDataDir(): void {
-  if (process.env.DATABASE_BACKEND !== "sqlite") return;
-  if (!process.env.SQLITE_DATA_DIR) {
-    const userData = app.getPath("userData");
-    process.env.SQLITE_DATA_DIR = path.join(userData, "foundry.db");
-    console.log("[Foundry] SQLite data dir not set — using:", process.env.SQLITE_DATA_DIR);
-  }
-}
 
 app.name = "Foundry";
 
@@ -68,9 +37,6 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(async () => {
-  resolveLocalDataDir();
-
-  // Register config handlers early so renderer can call them before DB connects
   registerEarlyHandlers();
 
   protocol.handle("foundry", (request) => {
@@ -79,18 +45,14 @@ app.whenReady().then(async () => {
     return net.fetch(`file://${filePath}`);
   });
 
-  // Create window FIRST so app always opens, even if DB fails
   const win = createWindow();
   registerTerminalHandlers(win);
 
-  // Register ALL IPC handlers eagerly — before DB connects
-  // Handlers use a registry that gets populated when DB is ready
   registerAllHandlers();
 
-  // Connect to DB in background
   try {
-    const { db, pool } = await createConnection();
-    await migrate(db);
+    const { pool } = await createConnection();
+    await migrate();
 
     const projectRepo = new ProjectRepository(pool);
     const columnRepo = new ColumnRepository(pool);
@@ -109,11 +71,9 @@ app.whenReady().then(async () => {
 
     setServices({ projectService, columnService, taskService, tagService, noteService, conversationService, settingRepo });
 
-    const backend = process.env.DATABASE_BACKEND || "supabase";
-    console.log("[Foundry] Database connected successfully (backend: " + backend + ")");
+    console.log("[Foundry] Database connected successfully (backend: sqlite)");
   } catch (err) {
     console.error("[Foundry] Database connection failed:", err);
-    // Window stays open, user can check connection
   }
 
   app.on("activate", () => {

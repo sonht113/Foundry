@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Remove Supabase entirely** — SQLite is now the only database backend
+- Remove `--backend` and `--db-url` CLI args from MCP server (always uses SQLite)
+- Remove `--backend sqlite` from client configs (MCP server defaults to SQLite)
+- Remove Drizzle ORM, pg, drizzle-kit, supabase-js, dotenv from dependencies
+- Remove `db:generate`, `db:push`, `db:migrate` scripts (no longer needed)
+- Remove Supabase schema (`pgTable`) and Drizzle migrations folder
+- Simplify `pglite-adapter.ts` → merged into `sqlite-adapter.ts`
+- Simplify `connection.ts` — SQLite-only, remove `getPool()`, `getDb()`, `getBackend()`
+- Simplify `migrate.ts` — no-op (tables created by adapter on connection)
+- Simplify Electron Settings UI — remove backend switching (Supabase option)
+- Simplify MCP Setup Guide — remove Supabase toggle and backend selection
+- Simplify ConnectionDialog — remove Supabase step
+- Remove `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `DATABASE_BACKEND` env vars
+- Remove `config:testConnection`, `db:switchBackend`, `db:restartApp`, `db:reconnect` IPC handlers
+- Remove `.env` file with embedded Supabase credentials
+
+### Fixed
+
+- `convertParams` correctly handles repeated `$N` references (fixes `NOT NULL constraint failed` on `settings.value`)
+- Replace PostgreSQL-only `ILIKE` with SQLite-compatible `LIKE` in task search
+- SQLite data now persists to disk automatically after every write (was in-memory only)
+- Add default data directory fallback per OS (matches Electron's `userData` path)
+- MCP server and Electron app now share the same SQLite database file
+
 ## [0.1.2] - 2026-06-08
 
 ### Changed

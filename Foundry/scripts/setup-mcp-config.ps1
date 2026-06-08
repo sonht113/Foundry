@@ -1,6 +1,5 @@
 $appData = $env:APPDATA
 $serverPath = "D:\Work\Task_Kanban\Foundry\apps\mcp-server\dist\server.js"
-$dbUrl = "postgresql://postgres:Hotrongson1%40@db.lstchobqibbqlqvxcaon.supabase.co:5432/postgres"
 
 $config = @{
     mcpServers = @{
@@ -8,7 +7,7 @@ $config = @{
             command = "node"
             args = @($serverPath)
             env = @{
-                DATABASE_URL = $dbUrl
+                SQLITE_DATA_DIR = Join-Path $appData "Foundry\foundry.db"
             }
         }
     }

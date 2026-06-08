@@ -1,16 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
-import { connect } from "net";
 import path from "path";
 
 import { app, ipcMain } from "electron";
 
-import { reconnectDatabase } from "@/main/ipc/reconnect";
-
 export interface DatabaseConfig {
-  backend: "supabase" | "sqlite";
-  databaseUrl?: string;
-  supabaseUrl?: string;
-  supabaseKey?: string;
+  backend: "sqlite";
 }
 
 interface AppConfig {
@@ -24,12 +18,12 @@ function getConfigPath(): string {
 export function loadConfig(): AppConfig {
   const configPath = getConfigPath();
   if (!existsSync(configPath)) {
-    return { database: { backend: "supabase" } };
+    return { database: { backend: "sqlite" } };
   }
   try {
     return JSON.parse(readFileSync(configPath, "utf-8"));
   } catch {
-    return { database: { backend: "supabase" } };
+    return { database: { backend: "sqlite" } };
   }
 }
 
@@ -47,45 +41,6 @@ export function registerConfigHandlers(): void {
     const config = loadConfig();
     config.database = db;
     saveConfig(config);
-    applyDatabaseConfig(db);
-
-    try {
-      const result = await reconnectDatabase();
-      return { success: true, backend: result.backend };
-    } catch (err) {
-      const message = (err as Error).message;
-      console.error("[Foundry] Reconnection after config save failed:", message);
-      return { success: false, error: message };
-    }
+    return { success: true, backend: "sqlite" };
   });
-
-  ipcMain.handle("config:testConnection", async (_event, databaseUrl: string) => {
-    try {
-      const match = databaseUrl.match(/@([^:/]+)(?::(\d+))?/);
-      const host = match?.[1] ?? "localhost";
-      const port = parseInt(match?.[2] ?? "5432", 10);
-
-      await new Promise<void>((resolve, reject) => {
-        const sock = connect({ host, port, timeout: 5000 }, () => {
-          sock.destroy();
-          resolve();
-        });
-        sock.on("error", (err) => {
-          sock.destroy();
-          reject(err);
-        });
-      });
-      return { success: true };
-    } catch (err) {
-      const message = (err as Error).message;
-      return { success: false, error: message };
-    }
-  });
-}
-
-export function applyDatabaseConfig(db: DatabaseConfig): void {
-  process.env.DATABASE_BACKEND = db.backend;
-  if (db.databaseUrl) process.env.DATABASE_URL = db.databaseUrl;
-  if (db.supabaseUrl) process.env.SUPABASE_URL = db.supabaseUrl;
-  if (db.supabaseKey) process.env.SUPABASE_ANON_KEY = db.supabaseKey;
 }

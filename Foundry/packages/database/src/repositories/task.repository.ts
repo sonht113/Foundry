@@ -253,7 +253,7 @@ export class TaskRepository implements ITaskRepository {
     const params: unknown[] = [query, query];
     let paramIdx = 3;
 
-    let sql = "SELECT * FROM tasks WHERE (title ILIKE $1 OR description ILIKE $2)";
+    let sql = "SELECT * FROM tasks WHERE (title LIKE $1 OR description LIKE $2)";
 
     if (input.projectId) {
       sql += ` AND project_id = $${paramIdx}`;

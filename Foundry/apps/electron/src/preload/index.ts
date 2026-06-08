@@ -115,20 +115,13 @@ const electronAPI = {
     },
   },
   db: {
-    getBackend: () => ipcRenderer.invoke("db:getBackend"),
-    switchBackend: (backend: "supabase" | "sqlite") =>
-      ipcRenderer.invoke("db:switchBackend", backend),
-    restartApp: () => ipcRenderer.invoke("db:restartApp"),
+    getBackend: () => Promise.resolve("sqlite"),
   },
   config: {
     get: () => ipcRenderer.invoke("config:get"),
     setDatabase: (db: {
-      backend: "supabase" | "sqlite";
-      databaseUrl?: string;
-      supabaseUrl?: string;
-      supabaseKey?: string;
+      backend: "sqlite";
     }) => ipcRenderer.invoke("config:setDatabase", db),
-    testConnection: (databaseUrl: string) => ipcRenderer.invoke("config:testConnection", databaseUrl),
   },
   mcp: {
     getConfig: () => ipcRenderer.invoke("mcp:getConfig"),

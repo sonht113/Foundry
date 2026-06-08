@@ -19,59 +19,7 @@ function resolveBundledModules(): void {
 
 resolveBundledModules();
 
-function loadDotenv(): void {
-  const envPaths = [
-    path.resolve(__dirname, "..", "..", "..", "..", ".env"),
-    path.resolve(__dirname, "..", "..", ".env"),
-  ];
-  for (const envPath of envPaths) {
-    if (!fs.existsSync(envPath)) continue;
-    const content = fs.readFileSync(envPath, "utf-8");
-    for (const line of content.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eq = trimmed.indexOf("=");
-      if (eq === -1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      const rawValue = trimmed.slice(eq + 1).trim();
-      const value = rawValue.replace(/^["']|["']$/g, "");
-      if (!process.env[key]) {
-        process.env[key] = value;
-      }
-    }
-  }
-}
-
-loadDotenv();
-
-function parseArgs(): { dbUrl?: string; backend?: string } {
-  const args = process.argv.slice(2);
-  const result: { dbUrl?: string; backend?: string } = {};
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--db-url" && i + 1 < args.length) {
-      result.dbUrl = args[i + 1];
-      i++;
-    } else if (args[i] === "--backend" && i + 1 < args.length) {
-      result.backend = args[i + 1];
-      i++;
-    }
-  }
-  return result;
-}
-
 async function main() {
-  const args = parseArgs();
-  const backend = args.backend ?? process.env.DATABASE_BACKEND ?? "supabase";
-  const dbUrl = args.dbUrl ?? process.env.DATABASE_URL;
-
-  if (backend === "supabase" && !dbUrl) {
-    console.error("[Foundry MCP] Error: DATABASE_URL is required for Supabase backend.");
-    console.error("  Set DATABASE_URL environment variable or pass --db-url <url>");
-    console.error("  Get your connection string from Supabase Dashboard → Settings → Database.");
-    console.error("  Or switch to SQLite: DATABASE_BACKEND=sqlite");
-    process.exit(1);
-  }
-
   const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
   const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
   const { createConnection, migrate } = await import("@foundry/database");
@@ -100,8 +48,8 @@ async function main() {
   const { registerTaskTools } = await import("./tools/task.tools");
   const { registerConversationTools } = await import("./tools/conversation.tools");
 
-  const { db, pool } = await createConnection(backend, dbUrl);
-  await migrate(db);
+  const { pool } = await createConnection();
+  await migrate();
 
   const projectRepo = new ProjectRepository(pool);
   const columnRepo = new ColumnRepository(pool);
@@ -140,7 +88,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.error(`[Foundry MCP] Connected via stdio. Backend: ${backend}`);
+  console.error("[Foundry MCP] Connected via stdio. Backend: sqlite");
 }
 
 main().catch((err) => {

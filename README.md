@@ -1,6 +1,6 @@
 # Foundry — AI-Native Task Manager
 
-An AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on Supabase (PostgreSQL) accessed through a shared service layer.
+An AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on SQLite (local-first, persisted to disk).
 
 ## Screenshots
 
@@ -17,6 +17,7 @@ An AI-native task manager where **both humans (UI) and AI agents (MCP) are first
 - **Project management** — create, archive, delete projects with columns and tasks
 - **Task tracking** — statuses (todo → doing → review → done), priorities, assignees, dates, tags, notes
 - **Desktop app** — cross-platform Electron shell (Windows, macOS, Linux)
+- **Offline-first** — SQLite backed, fully offline; no cloud services required
 
 ## Monorepo Structure
 
@@ -26,7 +27,7 @@ Foundry/
 │   ├── electron/          # Electron desktop app (React 19 + Vite + TailwindCSS 4)
 │   └── mcp-server/        # MCP server (28 tools, stdio transport)
 └── packages/
-    ├── database/          # Drizzle ORM schema + migrations (Supabase PostgreSQL)
+    ├── database/          # SQLite (sql.js) — raw SQL queries + repositories
     ├── domain/            # Business logic + validators (Zod)
     └── shared/            # Shared types + utilities
 ```
@@ -38,7 +39,7 @@ Foundry/
 | Desktop shell | Electron 33 |
 | UI | React 19 + TypeScript + Vite 6 + TailwindCSS 4 |
 | State | Zustand 5 |
-| Database | Supabase (PostgreSQL) or SQLite (local) + Drizzle ORM + pg |
+| Database | SQLite (sql.js) — persisted to disk |
 | MCP | @modelcontextprotocol/sdk |
 | Drag-drop | @dnd-kit/core + @dnd-kit/sortable |
 | Packaging | electron-builder |
@@ -51,9 +52,6 @@ Foundry/
 
 - Node.js 18+
 - pnpm 10+
-- Either:
-  - A [Supabase](https://supabase.com) project (free tier works), **or**
-  - SQLite (local/offline — no external services required)
 
 ### Setup
 
@@ -65,34 +63,22 @@ cd Task_Kanban/Foundry
 # 2. Install dependencies
 pnpm install
 
-# 3. Configure environment
-cp .env.example .env
-# For Supabase (cloud) — edit .env with your Supabase credentials:
-#   DATABASE_BACKEND=supabase
-#   DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
-#   SUPABASE_URL=https://[REF].supabase.co
-#   SUPABASE_ANON_KEY=your-anon-key-here
-#
-# For SQLite (local) — no credentials needed:
-#   DATABASE_BACKEND=sqlite
-#   SQLITE_DATA_DIR=./foundry.db
-
-# 4. Push database schema
-pnpm --filter @foundry/database run db:push
-
-# 5. Start development
+# 3. Start development
 pnpm dev          # Electron + Vite dev mode
 ```
+
+The database file is created automatically at:
+- **Windows**: `%APPDATA%\Foundry\foundry.db`
+- **macOS**: `~/Library/Application Support/Foundry/foundry.db`
+- **Linux**: `~/.local/share/Foundry/foundry.db`
+
+To use a custom path, set the `SQLITE_DATA_DIR` environment variable.
 
 ### Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_BACKEND` | `"supabase"` (default, cloud) or `"sqlite"` (local/offline) |
-| `DATABASE_URL` | Supabase PostgreSQL connection string (required for `supabase` backend) |
-| `SUPABASE_URL` | Supabase project URL (required for `supabase` backend) |
-| `SUPABASE_ANON_KEY` | Supabase anonymous API key (required for `supabase` backend) |
-| `SQLITE_DATA_DIR` | File path for SQLite database (default: `%APPDATA%/Foundry/foundry.db`) |
+| `SQLITE_DATA_DIR` | Custom file path for SQLite database (optional — auto-defaults per OS) |
 
 ## Commands
 
@@ -125,19 +111,6 @@ Push to `main` or trigger manually via Actions tab — builds artifacts for all 
 
 Download artifacts from the workflow run summary page.
 
-### Database Management
-
-```bash
-# Generate migration from schema changes
-pnpm --filter @foundry/database run db:generate
-
-# Push schema directly to database (development)
-pnpm --filter @foundry/database run db:push
-
-# Run pending migrations
-pnpm --filter @foundry/database run db:migrate
-```
-
 ## MCP Server
 
 The MCP server exposes **28 tools** via stdio transport:
@@ -153,7 +126,7 @@ The MCP server exposes **28 tools** via stdio transport:
 
 ### Connecting AI Clients
 
-The Foundry MCP server supports two backends: **Supabase** (cloud) and **SQLite** (local).
+The Foundry MCP server uses **SQLite** (local, persisted to disk) via **stdio transport**.
 
 > **Development vs Installed:** When running from source, the server path is `apps/mcp-server/dist/server.js`.
 > When Foundry is installed (via NSIS/DMG/AppImage), the MCP server is bundled at `resources/mcp-server/server.js`
@@ -162,7 +135,19 @@ The Foundry MCP server supports two backends: **Supabase** (cloud) and **SQLite*
 
 Build first: `pnpm build`, then configure your MCP client:
 
-**Method A — Supabase via `DATABASE_URL` env var (dev):**
+**Development (source checkout):**
+```json
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "node",
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"]
+    }
+  }
+}
+```
+
+Optionally set a custom data directory:
 ```json
 {
   "mcpServers": {
@@ -170,64 +155,30 @@ Build first: `pnpm build`, then configure your MCP client:
       "command": "node",
       "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js"],
       "env": {
-        "DATABASE_URL": "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres"
+        "SQLITE_DATA_DIR": "/path/to/foundry.db"
       }
     }
   }
 }
 ```
 
-**Method B — Supabase via `--db-url` CLI arg (dev):**
+**Installed (Windows example):**
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
       "args": [
-        "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
-        "--db-url",
-        "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres"
-      ]
-    }
-  }
-}
-```
-
-**Method C — SQLite local/offline (dev):**
-```json
-{
-  "mcpServers": {
-    "foundry": {
-      "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "sqlite"],
-      "env": {
-        "SQLITE_DATA_DIR": "./foundry.db"
-      }
-    }
-  }
-}
-```
-
-**Method D — SQLite (installed app, Windows example):**
-```json
-{
-  "mcpServers": {
-    "foundry": {
-      "command": "node",
-      "args": [
-        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
-        "--backend",
-        "sqlite"
+        "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js"
       ],
       "env": {
-        "SQLITE_DATA_DIR": "%APPDATA%\\Foundry\\foundry.db",
         "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
       }
     }
   }
 }
 ```
-> Paths vary by OS. Open **Settings → MCP Server** in the Foundry app to get the exact config.
+> Paths vary by OS and install location. Open **Settings → MCP Server** in the Foundry app to get the exact config.
 
 ### Client-Specific Config Paths
 
@@ -240,11 +191,9 @@ Build first: `pnpm build`, then configure your MCP client:
 | **GitHub Copilot** | `%USERPROFILE%\.copilot\mcp.json` | `~/.copilot/mcp.json` | Uses `"servers"` key instead of `"mcpServers"` |
 | **Windsurf** | `%APPDATA%\windsurf\mcp.json` | `~/.windsurf/mcp.json` | Standard `mcpServers` format |
 
-For detailed setup per client, see [AGENTS.md](AGENTS.md).
-
 ## Architecture
 
-- **Cloud-first with local fallback**: Supabase PostgreSQL as source of truth; SQLite for local/offline development
+- **Local-first**: SQLite (sql.js) — data persisted to disk, fully offline, no cloud services required
 - **Process model**: Electron main process hosts services; renderer talks via IPC (contextBridge); MCP server runs as stdio child process
 - **ID format**: nanoid with prefixes (`proj_`, `task_`, `tag_`, `note_`, `hist_`)
 - **Error handling**: Zod validation + custom `AppError` hierarchy + Zustand error states + toast notifications
@@ -269,7 +218,7 @@ Priorities: `low`, `medium`, `high`, `critical`
 | Phase | Status | Scope |
 |-------|--------|-------|
 | Phase 1 | Done | Electron + Project/Task CRUD + dashboard UI |
-| Phase 2 | Done | MCP server (28 tools) + Supabase migration |
+| Phase 2 | Done | MCP server (28 tools) + SQLite migration |
 | Phase 3 | In progress | AI roadmap generator, sprint planner, task breakdown |
 | Phase 4 | Planned | Real-time sync, team workspace, multi-agent support |
 

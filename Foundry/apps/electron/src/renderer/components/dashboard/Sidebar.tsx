@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Command, Hash, Home, Plus, Search, Settings, Terminal, Trash2, Wifi, WifiOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Command, Hash, Home, Plus, Search, Settings, Terminal, Trash2, Wifi } from "lucide-react";
 import { useState } from "react";
 
 import { useProjectStore } from "../../stores/projectStore";
@@ -261,13 +261,9 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               {dbBackend && (
                 <div
                   className="flex w-full cursor-default items-center justify-center rounded-md p-2"
-                  title={`Database: ${dbBackend === "supabase" ? "Supabase (cloud)" : "SQLite (local)"}`}
+                  title="Database: SQLite (local)"
                 >
-                  {dbBackend === "supabase" ? (
-                    <WifiOff size={12} className="text-amber-500" />
-                  ) : (
-                    <Wifi size={12} className="text-emerald-500" />
-                  )}
+                  <Wifi size={12} className="text-emerald-500" />
                 </div>
               )}
             </>
@@ -312,14 +308,10 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               {dbBackend && (
                 <div
                   className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-zinc-400 dark:text-zinc-600"
-                  title={`Database backend: ${dbBackend === "supabase" ? "Supabase (cloud)" : "SQLite (local/offline)"}`}
+                  title="Database backend: SQLite (local/offline)"
                 >
-                  {dbBackend === "supabase" ? (
-                    <WifiOff size={12} className="text-amber-500" />
-                  ) : (
-                    <Wifi size={12} className="text-emerald-500" />
-                  )}
-                  <span className="flex-1">{dbBackend === "supabase" ? "Supabase" : "SQLite (local)"}</span>
+                  <Wifi size={12} className="text-emerald-500" />
+                  <span className="flex-1">SQLite (local)</span>
                 </div>
               )}
             </>
