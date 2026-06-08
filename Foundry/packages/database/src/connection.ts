@@ -2,8 +2,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
-import { createPGliteConnection } from "./pglite-adapter";
 import type { DatabaseInstance, Queryable } from "./pglite-adapter";
+import { createSqliteConnection } from "./sqlite-adapter";
 
 let pool: Pool | null = null;
 let db: NodePgDatabase<typeof schema> | null = null;
@@ -43,14 +43,13 @@ export async function createConnection(
 ): Promise<{ db: NodePgDatabase<typeof schema> | null; pool: Queryable }> {
   const resolved = backend ?? process.env.DATABASE_BACKEND ?? "supabase";
 
-  if (resolved === "pglite") {
-    const pgData = process.env.PGLITE_DATA_DIR;
-    const inst = await createPGliteConnection(pgData);
+  if (resolved === "pglite" || resolved === "sqlite") {
+    const dataDir = process.env.PGLITE_DATA_DIR || process.env.SQLITE_DATA_DIR;
+    const inst = await createSqliteConnection(dataDir);
     instance = inst;
-    // drizzle db hack — cast PGlite drizzle to node-postgres type for migrator compat
-    db = inst.db;
+    db = null;
     pool = null;
-    return { db: inst.db!, pool: inst.pool };
+    return { db: null, pool: inst.pool };
   }
 
   const { db: drizzleDb, pool: queryable } = createSupabaseConnection(connString);
@@ -58,9 +57,9 @@ export async function createConnection(
 }
 
 export function getPool(): Pool {
-  if (instance?.backend === "pglite") {
+  if (instance?.backend === "pglite" || instance?.backend === "sqlite") {
     throw new Error(
-      "getPool() is not available with PGlite backend. Use getQueryable() instead."
+      "getPool() is not available with local backend. Use getQueryable() instead."
     );
   }
   if (!pool) throw new Error("Database not initialized. Call createConnection() first.");
@@ -68,7 +67,7 @@ export function getPool(): Pool {
 }
 
 export function getQueryable(): Queryable {
-  if (instance?.backend === "pglite") {
+  if (instance?.backend === "pglite" || instance?.backend === "sqlite") {
     return instance.pool;
   }
   if (!pool) throw new Error("Database not initialized. Call createConnection() first.");
@@ -80,7 +79,7 @@ export function getDb(): NodePgDatabase<typeof schema> {
   return db;
 }
 
-export function getBackend(): "supabase" | "pglite" {
+export function getBackend(): "supabase" | "pglite" | "sqlite" {
   return instance?.backend ?? "supabase";
 }
 

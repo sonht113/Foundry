@@ -22,19 +22,19 @@ if (savedConfig.database?.databaseUrl || savedConfig.database?.backend === "pgli
   applyDatabaseConfig(savedConfig.database);
 }
 
-// If no Supabase URL is configured, auto-fallback to PGlite
-if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "pglite") {
-  process.env.DATABASE_BACKEND = "pglite";
-  console.log("[Foundry] No DATABASE_URL found — defaulting to PGlite backend");
+// If no Supabase URL is configured, auto-fallback to SQLite
+if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "pglite" && process.env.DATABASE_BACKEND !== "sqlite") {
+  process.env.DATABASE_BACKEND = "sqlite";
+  console.log("[Foundry] No DATABASE_URL found — defaulting to SQLite backend");
 }
 
-// PGlite data directory fallback — use OS user data dir for persistence
-function resolvePGliteDataDir(): void {
-  if (process.env.DATABASE_BACKEND !== "pglite") return;
-  if (!process.env.PGLITE_DATA_DIR) {
+// SQLite data directory fallback — use OS user data dir for persistence
+function resolveLocalDataDir(): void {
+  if (process.env.DATABASE_BACKEND !== "pglite" && process.env.DATABASE_BACKEND !== "sqlite") return;
+  if (!process.env.SQLITE_DATA_DIR) {
     const userData = app.getPath("userData");
-    process.env.PGLITE_DATA_DIR = path.join(userData, "pglite-data");
-    console.log("[Foundry] PGlite data dir not set — using:", process.env.PGLITE_DATA_DIR);
+    process.env.SQLITE_DATA_DIR = path.join(userData, "foundry.db");
+    console.log("[Foundry] SQLite data dir not set — using:", process.env.SQLITE_DATA_DIR);
   }
 }
 
@@ -68,7 +68,7 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(async () => {
-  resolvePGliteDataDir();
+  resolveLocalDataDir();
 
   // Register config handlers early so renderer can call them before DB connects
   registerEarlyHandlers();

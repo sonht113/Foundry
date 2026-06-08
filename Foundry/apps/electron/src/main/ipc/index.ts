@@ -102,7 +102,7 @@ function registerDbHandlers(): void {
     return getBackend();
   });
 
-  ipcMain.handle("db:switchBackend", async (_event, backend: "supabase" | "pglite") => {
+  ipcMain.handle("db:switchBackend", async (_event, backend: "supabase" | "pglite" | "sqlite") => {
     const envPath = resolveEnvPath();
     const content = readFileSync(envPath, "utf-8");
     let newContent: string;
