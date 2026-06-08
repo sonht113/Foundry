@@ -21,7 +21,7 @@ export function getMcpConfig(): McpConfig {
       serverPath,
       dataDir,
       nodePath,
-      command: ["node", serverPath, "--backend", "sqlite"],
+      command: ["node", serverPath],
       environment: {
         SQLITE_DATA_DIR: dataDir,
         NODE_PATH: nodePath,

@@ -126,6 +126,9 @@ const electronAPI = {
   mcp: {
     getConfig: () => ipcRenderer.invoke("mcp:getConfig"),
   },
+  clipboard: {
+    write: (text: string) => ipcRenderer.invoke("clipboard:writeText", text),
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);

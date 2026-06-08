@@ -106,6 +106,9 @@ interface ElectronAPI {
     get: () => Promise<{ database: { backend: string } }>;
     setDatabase: (db: { backend: "sqlite" }) => Promise<{ success: boolean }>;
   };
+  clipboard: {
+    write: (text: string) => Promise<{ success: boolean }>;
+  };
 }
 
 interface Project {

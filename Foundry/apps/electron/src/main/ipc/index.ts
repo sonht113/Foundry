@@ -9,6 +9,7 @@ import type {
 } from "@foundry/domain";
 import { ipcMain } from "electron";
 
+import { registerClipboardHandlers } from "@/main/ipc/clipboard.handler";
 import { registerColumnHandlers } from "@/main/ipc/column.handler";
 import { registerConfigHandlers } from "@/main/ipc/config.handler";
 import { registerConversationHandlers } from "@/main/ipc/conversation.handler";
@@ -24,6 +25,7 @@ import { registerTerminalHandlers } from "@/main/ipc/terminal.handler";
 export { registerTerminalHandlers, setServices };
 
 export function registerAllHandlers(): void {
+  registerClipboardHandlers();
   registerMcpHandlers();
 
   registerProjectHandlers({

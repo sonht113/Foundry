@@ -1,6 +1,6 @@
 {
   "name": "@foundry/electron",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI-Native Task Manager — Foundry",
   "main": "dist/main/index.js",
   "scripts": {

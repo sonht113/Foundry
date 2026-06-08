@@ -197,7 +197,7 @@ export function MCPSetupGuide() {
   const dataDir = displayPaths.dataDir;
 
   function copyConfig(key: string, text: string) {
-    navigator.clipboard.writeText(text).then(() => {
+    window.electronAPI.clipboard.write(text).then(() => {
       setCopied(key);
       addToast("Copied configuration to clipboard", "success");
       setTimeout(() => setCopied(""), 2000);
