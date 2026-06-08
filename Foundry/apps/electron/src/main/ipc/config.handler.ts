@@ -4,6 +4,8 @@ import path from "path";
 
 import { app, ipcMain } from "electron";
 
+import { reconnectDatabase } from "@/main/ipc/reconnect";
+
 export interface DatabaseConfig {
   backend: "supabase" | "pglite";
   databaseUrl?: string;
@@ -46,7 +48,15 @@ export function registerConfigHandlers(): void {
     config.database = db;
     saveConfig(config);
     applyDatabaseConfig(db);
-    return { success: true };
+
+    try {
+      const result = await reconnectDatabase();
+      return { success: true, backend: result.backend };
+    } catch (err) {
+      const message = (err as Error).message;
+      console.error("[Foundry] Reconnection after config save failed:", message);
+      return { success: false, error: message };
+    }
   });
 
   ipcMain.handle("config:testConnection", async (_event, databaseUrl: string) => {

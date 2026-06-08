@@ -22,6 +22,12 @@ if (savedConfig.database?.databaseUrl || savedConfig.database?.backend === "pgli
   applyDatabaseConfig(savedConfig.database);
 }
 
+// If no Supabase URL is configured, auto-fallback to PGlite
+if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "pglite") {
+  process.env.DATABASE_BACKEND = "pglite";
+  console.log("[Foundry] No DATABASE_URL found — defaulting to PGlite backend");
+}
+
 // PGlite data directory fallback — use OS user data dir for persistence
 function resolvePGliteDataDir(): void {
   if (process.env.DATABASE_BACKEND !== "pglite") return;
