@@ -47,6 +47,14 @@ function getDefaultDataDir(): string {
   return path.join(homedir(), ".local", "share", "Foundry", "foundry.db");
 }
 
+function expandEnvPath(p: string): string {
+  let result = p;
+  result = result.replace(/%APPDATA%/gi, process.env.APPDATA || path.join(homedir(), "AppData", "Roaming"));
+  result = result.replace(/%LOCALAPPDATA%/gi, process.env.LOCALAPPDATA || path.join(homedir(), "AppData", "Local"));
+  result = result.replace(/^~(?=[/\\])/, homedir());
+  return result;
+}
+
 const CREATE_TABLES_SQL = `
 CREATE TABLE IF NOT EXISTS "projects" (
   "id" text PRIMARY KEY NOT NULL,
@@ -130,7 +138,7 @@ CREATE TABLE IF NOT EXISTS "settings" (
 export async function createSqliteConnection(dataDir?: string): Promise<DatabaseInstance> {
   const SQL = await initSqlJs();
 
-  const resolvedDataDir = dataDir || getDefaultDataDir();
+  const resolvedDataDir = expandEnvPath(dataDir || getDefaultDataDir());
 
   let db: SqlJsDatabase;
   try {
