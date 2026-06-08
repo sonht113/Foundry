@@ -20,7 +20,7 @@ const STATUS_KEYS: Record<string, string> = {
 };
 
 function needsSetup(db: { backend: string; databaseUrl?: string }): boolean {
-  if (db.backend === "pglite") return false;
+  if (db.backend === "sqlite") return false;
   if (db.backend === "supabase" && db.databaseUrl) return false;
   return true;
 }
@@ -78,9 +78,10 @@ export function App() {
       .then((backend) => {
         setDbBackend(backend);
         if (backend) {
+          const isLocal = backend === "sqlite";
           addToast(
-            backend === "pglite"
-              ? "Connected to PGlite (local database)"
+            isLocal
+              ? "Connected to SQLite (local database)"
               : "Connected to Supabase (cloud database)",
             "info"
           );
@@ -89,11 +90,12 @@ export function App() {
       .catch(() => {});
   }
 
-  async function handleSetupComplete(backend: "supabase" | "pglite") {
+  async function handleSetupComplete(backend: "supabase" | "sqlite") {
     setShowSetup(false);
+    const isLocal = backend === "sqlite";
     addToast(
-      backend === "pglite"
-        ? "PGlite config saved. Restart to apply."
+      isLocal
+        ? "SQLite config saved. Restart to apply."
         : "Supabase config saved. Restart to apply.",
       "info"
     );

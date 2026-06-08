@@ -38,7 +38,7 @@ Foundry/
 | Desktop shell | Electron 33 |
 | UI | React 19 + TypeScript + Vite 6 + TailwindCSS 4 |
 | State | Zustand 5 |
-| Database | Supabase (PostgreSQL) or PGlite (WASM, local) + Drizzle ORM + pg |
+| Database | Supabase (PostgreSQL) or SQLite (local) + Drizzle ORM + pg |
 | MCP | @modelcontextprotocol/sdk |
 | Drag-drop | @dnd-kit/core + @dnd-kit/sortable |
 | Packaging | electron-builder |
@@ -53,7 +53,7 @@ Foundry/
 - pnpm 10+
 - Either:
   - A [Supabase](https://supabase.com) project (free tier works), **or**
-  - PGlite (local/offline — no external services required)
+  - SQLite (local/offline — no external services required)
 
 ### Setup
 
@@ -73,9 +73,9 @@ cp .env.example .env
 #   SUPABASE_URL=https://[REF].supabase.co
 #   SUPABASE_ANON_KEY=your-anon-key-here
 #
-# For PGlite (local) — no credentials needed:
-#   DATABASE_BACKEND=pglite
-#   PGLITE_DATA_DIR=./.pglite
+# For SQLite (local) — no credentials needed:
+#   DATABASE_BACKEND=sqlite
+#   SQLITE_DATA_DIR=./foundry.db
 
 # 4. Push database schema
 pnpm --filter @foundry/database run db:push
@@ -88,11 +88,11 @@ pnpm dev          # Electron + Vite dev mode
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_BACKEND` | `"supabase"` (default, cloud) or `"pglite"` (local/offline) |
+| `DATABASE_BACKEND` | `"supabase"` (default, cloud) or `"sqlite"` (local/offline) |
 | `DATABASE_URL` | Supabase PostgreSQL connection string (required for `supabase` backend) |
 | `SUPABASE_URL` | Supabase project URL (required for `supabase` backend) |
 | `SUPABASE_ANON_KEY` | Supabase anonymous API key (required for `supabase` backend) |
-| `PGLITE_DATA_DIR` | Directory for PGlite persistent storage (default: in-memory, lost on restart) |
+| `SQLITE_DATA_DIR` | File path for SQLite database (default: `%APPDATA%/Foundry/foundry.db`) |
 
 ## Commands
 
@@ -153,7 +153,7 @@ The MCP server exposes **28 tools** via stdio transport:
 
 ### Connecting AI Clients
 
-The Foundry MCP server supports two backends: **Supabase** (cloud) and **PGlite** (local).
+The Foundry MCP server supports two backends: **Supabase** (cloud) and **SQLite** (local).
 
 > **Development vs Installed:** When running from source, the server path is `apps/mcp-server/dist/server.js`.
 > When Foundry is installed (via NSIS/DMG/AppImage), the MCP server is bundled at `resources/mcp-server/server.js`
@@ -193,22 +193,22 @@ Build first: `pnpm build`, then configure your MCP client:
 }
 ```
 
-**Method C — PGlite local/offline (dev):**
+**Method C — SQLite local/offline (dev):**
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "pglite"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "sqlite"],
       "env": {
-        "PGLITE_DATA_DIR": "./.pglite"
+        "SQLITE_DATA_DIR": "./foundry.db"
       }
     }
   }
 }
 ```
 
-**Method D — PGlite (installed app, Windows example):**
+**Method D — SQLite (installed app, Windows example):**
 ```json
 {
   "mcpServers": {
@@ -217,10 +217,10 @@ Build first: `pnpm build`, then configure your MCP client:
       "args": [
         "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
         "--backend",
-        "pglite"
+        "sqlite"
       ],
       "env": {
-        "PGLITE_DATA_DIR": "%APPDATA%\\Foundry\\pglite-data",
+        "SQLITE_DATA_DIR": "%APPDATA%\\Foundry\\foundry.db",
         "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
       }
     }
@@ -244,7 +244,7 @@ For detailed setup per client, see [AGENTS.md](AGENTS.md).
 
 ## Architecture
 
-- **Cloud-first with local fallback**: Supabase PostgreSQL as source of truth; PGlite (WASM PostgreSQL) for local/offline development
+- **Cloud-first with local fallback**: Supabase PostgreSQL as source of truth; SQLite for local/offline development
 - **Process model**: Electron main process hosts services; renderer talks via IPC (contextBridge); MCP server runs as stdio child process
 - **ID format**: nanoid with prefixes (`proj_`, `task_`, `tag_`, `note_`, `hist_`)
 - **Error handling**: Zod validation + custom `AppError` hierarchy + Zustand error states + toast notifications

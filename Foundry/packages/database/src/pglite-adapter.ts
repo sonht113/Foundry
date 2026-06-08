@@ -16,7 +16,7 @@ export interface Queryable {
 }
 
 export interface DatabaseInstance {
-  backend: "supabase" | "pglite" | "sqlite";
+  backend: "supabase" | "sqlite";
   db: NodePgDatabase<typeof schema> | null;
   pool: Queryable;
   close(): Promise<void>;

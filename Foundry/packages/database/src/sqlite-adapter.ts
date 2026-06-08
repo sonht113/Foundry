@@ -20,7 +20,7 @@ export interface Queryable {
 }
 
 export interface DatabaseInstance {
-  backend: "pglite" | "sqlite";
+  backend: "sqlite";
   db: NodePgDatabase<typeof schema> | null;
   pool: Queryable;
   close(): Promise<void>;

@@ -7,7 +7,7 @@ import { app, ipcMain } from "electron";
 import { reconnectDatabase } from "@/main/ipc/reconnect";
 
 export interface DatabaseConfig {
-  backend: "supabase" | "pglite" | "sqlite";
+  backend: "supabase" | "sqlite";
   databaseUrl?: string;
   supabaseUrl?: string;
   supabaseKey?: string;

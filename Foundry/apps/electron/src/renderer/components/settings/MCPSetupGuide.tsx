@@ -7,7 +7,7 @@ const DB_URL_PLACEHOLDER =
   "postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxxx.supabase.co:5432/postgres";
 
 type Platform = "win32" | "darwin" | "linux";
-type Backend = "pglite" | "supabase";
+type Backend = "sqlite" | "supabase";
 
 interface PlatformInfo {
   label: string;
@@ -54,17 +54,17 @@ interface EstimatedPaths {
 const ESTIMATED_PATHS: Record<Platform, EstimatedPaths> = {
   win32: {
     serverPath: "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
-    dataDir: "%APPDATA%\\Foundry\\pglite-data",
+    dataDir: "%APPDATA%\\Foundry\\foundry.db",
     nodePath: "C:\\Program Files\\Foundry\\resources\\app\\node_modules",
   },
   darwin: {
     serverPath: "/Applications/Foundry.app/Contents/Resources/mcp-server/server.js",
-    dataDir: "~/Library/Application Support/Foundry/pglite-data",
+    dataDir: "~/Library/Application Support/Foundry/foundry.db",
     nodePath: "/Applications/Foundry.app/Contents/Resources/app/node_modules",
   },
   linux: {
     serverPath: "/opt/Foundry/resources/mcp-server/server.js",
-    dataDir: "~/.local/share/Foundry/pglite-data",
+    dataDir: "~/.local/share/Foundry/foundry.db",
     nodePath: "/opt/Foundry/resources/app/node_modules",
   },
 };
@@ -86,14 +86,14 @@ interface BaseConfig {
 function buildBaseConfig(mcp: McpServerConfig | null, backend: Backend): BaseConfig {
   const serverPath =
     mcp?.serverPath ?? "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js";
-  const dataDir = mcp?.dataDir ?? "./.pglite";
+  const dataDir = mcp?.dataDir ?? "./foundry.db";
   const args = [serverPath];
-  if (backend === "pglite") {
-    args.push("--backend", "pglite");
+  if (backend === "sqlite") {
+    args.push("--backend", "sqlite");
   }
   const env: Record<string, string> = {};
-  if (backend === "pglite") {
-    env.PGLITE_DATA_DIR = dataDir;
+  if (backend === "sqlite") {
+    env.SQLITE_DATA_DIR = dataDir;
   } else {
     env.DATABASE_URL = DB_URL_PLACEHOLDER;
   }
@@ -162,7 +162,7 @@ function detectPlatform(): Platform {
 export function MCPSetupGuide() {
   const addToast = useUIStore((s) => s.addToast);
   const [platform, setPlatform] = useState<Platform>(detectPlatform);
-  const [backend, setBackend] = useState<Backend>("pglite");
+  const [backend, setBackend] = useState<Backend>("sqlite");
   const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
   const [copied, setCopied] = useState("");
 
@@ -215,8 +215,8 @@ export function MCPSetupGuide() {
   }
 
   const standardPreview =
-    backend === "pglite"
-      ? "PGlite — local database, no Supabase required"
+    backend === "sqlite"
+      ? "SQLite — local database, no Supabase required"
       : "Supabase — set DATABASE_URL with your connection string";
 
   return (
@@ -268,7 +268,7 @@ export function MCPSetupGuide() {
             </div>
             <div>
               <label className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
-                PGlite Data Directory
+                SQLite Data File
               </label>
               <code className="mt-1 block truncate rounded-md bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
                 {dataDir}
@@ -298,14 +298,14 @@ export function MCPSetupGuide() {
         <h3 className="mb-3 text-sm font-semibold text-zinc-800 dark:text-zinc-200">Backend</h3>
         <div className="flex gap-1 rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900/50">
           <button
-            onClick={() => setBackend("pglite")}
+            onClick={() => setBackend("sqlite")}
             className={`flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              backend === "pglite"
+              backend === "sqlite"
                 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                 : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-400"
             }`}
           >
-            PGlite (Local)
+            SQLite (Local)
           </button>
           <button
             onClick={() => setBackend("supabase")}

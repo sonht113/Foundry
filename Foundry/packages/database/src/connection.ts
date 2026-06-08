@@ -43,8 +43,8 @@ export async function createConnection(
 ): Promise<{ db: NodePgDatabase<typeof schema> | null; pool: Queryable }> {
   const resolved = backend ?? process.env.DATABASE_BACKEND ?? "supabase";
 
-  if (resolved === "pglite" || resolved === "sqlite") {
-    const dataDir = process.env.PGLITE_DATA_DIR || process.env.SQLITE_DATA_DIR;
+  if (resolved !== "supabase") {
+    const dataDir = process.env.SQLITE_DATA_DIR;
     const inst = await createSqliteConnection(dataDir);
     instance = inst;
     db = null;
@@ -57,7 +57,7 @@ export async function createConnection(
 }
 
 export function getPool(): Pool {
-  if (instance?.backend === "pglite" || instance?.backend === "sqlite") {
+  if (instance && instance.backend !== "supabase") {
     throw new Error(
       "getPool() is not available with local backend. Use getQueryable() instead."
     );
@@ -67,7 +67,7 @@ export function getPool(): Pool {
 }
 
 export function getQueryable(): Queryable {
-  if (instance?.backend === "pglite" || instance?.backend === "sqlite") {
+  if (instance && instance.backend !== "supabase") {
     return instance.pool;
   }
   if (!pool) throw new Error("Database not initialized. Call createConnection() first.");
@@ -79,7 +79,7 @@ export function getDb(): NodePgDatabase<typeof schema> {
   return db;
 }
 
-export function getBackend(): "supabase" | "pglite" | "sqlite" {
+export function getBackend(): "supabase" | "sqlite" {
   return instance?.backend ?? "supabase";
 }
 

@@ -100,13 +100,13 @@ interface ElectronAPI {
     removeAllListeners: () => void;
   };
   db: {
-    getBackend: () => Promise<"supabase" | "pglite">;
-    switchBackend: (backend: "supabase" | "pglite") => Promise<{ backend: string; needsRestart: boolean }>;
+    getBackend: () => Promise<"supabase" | "sqlite">;
+    switchBackend: (backend: "supabase" | "sqlite") => Promise<{ backend: string; needsRestart: boolean }>;
     restartApp: () => Promise<{ success: boolean }>;
   };
   config: {
     get: () => Promise<{ database: { backend: string; databaseUrl?: string; supabaseUrl?: string; supabaseKey?: string } }>;
-    setDatabase: (db: { backend: "supabase" | "pglite"; databaseUrl?: string; supabaseUrl?: string; supabaseKey?: string }) => Promise<{ success: boolean }>;
+    setDatabase: (db: { backend: "supabase" | "sqlite"; databaseUrl?: string; supabaseUrl?: string; supabaseKey?: string }) => Promise<{ success: boolean }>;
     testConnection: (databaseUrl: string) => Promise<{ success: boolean; error?: string }>;
   };
 }

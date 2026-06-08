@@ -81,7 +81,7 @@ The MCP server exposes 28 tools via stdio transport:
 
 ### MCP Client Integration
 
-The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and PGlite (local). Four methods to configure:
+The Foundry MCP server uses **stdio transport** and supports two backends: Supabase (cloud) and SQLite (local). Four methods to configure:
 
 > **Development vs Installed:** In development (source checkout), the server path is `apps/mcp-server/dist/server.js`.
 > When Foundry is installed as a packaged app, the MCP server is bundled at `resources/mcp-server/server.js`
@@ -119,7 +119,7 @@ The Foundry MCP server uses **stdio transport** and supports two backends: Supab
 }
 ```
 
-**Method C — PGlite (local/offline, no Supabase required)**:
+**Method C — SQLite (local)/offline, no Supabase required)**:
 ```json
 {
   "mcpServers": {
@@ -128,21 +128,21 @@ The Foundry MCP server uses **stdio transport** and supports two backends: Supab
       "args": [
         "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
         "--backend",
-        "pglite"
+        "sqlite"
       ]
     }
   }
 }
 ```
-Optionally set `PGLITE_DATA_DIR` env var to persist data (default: in-memory, lost on restart):
+Optionally set `SQLITE_DATA_DIR` env var to persist data (default: in-memory, lost on restart):
 ```json
 {
   "mcpServers": {
     "foundry": {
       "command": "node",
-      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "pglite"],
+      "args": ["/absolute/path/to/Foundry/apps/mcp-server/dist/server.js", "--backend", "sqlite"],
       "env": {
-        "PGLITE_DATA_DIR": "/path/to/data/dir"
+        "SQLITE_DATA_DIR": "/path/to/data/dir"
       }
     }
   }
@@ -162,10 +162,10 @@ Open **Settings → MCP Server** to copy the exact config. On Windows, it looks 
       "args": [
         "C:\\Program Files\\Foundry\\resources\\mcp-server\\server.js",
         "--backend",
-        "pglite"
+        "sqlite"
       ],
       "env": {
-        "PGLITE_DATA_DIR": "%APPDATA%\\Foundry\\pglite-data",
+        "SQLITE_DATA_DIR": "%APPDATA%\\Foundry\\foundry.db",
         "NODE_PATH": "C:\\Program Files\\Foundry\\resources\\app\\node_modules"
       }
     }
@@ -173,7 +173,7 @@ Open **Settings → MCP Server** to copy the exact config. On Windows, it looks 
 }
 ```
 
-For Supabase (installed), replace `--backend pglite` with `DATABASE_URL` in the `env` section.
+For Supabase (installed), replace `--backend sqlite` with `DATABASE_URL` in the `env` section.
 > Paths vary by OS and install location. Always use the config from **Settings → MCP Server**.
 
 Build first: `npm run build` (from `Foundry/` — uses Turbo to build all packages including `@foundry/mcp-server`). Replace `/absolute/path/to/Foundry` with your actual project path.
@@ -198,11 +198,11 @@ Paste the config under the `mcp` key. Format uses `type: "local"`, `command` as 
         "node",
         "/absolute/path/to/Foundry/apps/mcp-server/dist/server.js",
         "--backend",
-        "pglite"
+        "sqlite"
       ],
       "enabled": true,
       "environment": {
-        "PGLITE_DATA_DIR": "./.pglite"
+        "SQLITE_DATA_DIR": "./foundry.db"
       }
     }
   }

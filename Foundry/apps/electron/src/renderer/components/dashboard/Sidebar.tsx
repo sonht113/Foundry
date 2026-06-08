@@ -261,9 +261,9 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               {dbBackend && (
                 <div
                   className="flex w-full cursor-default items-center justify-center rounded-md p-2"
-                  title={`Database: ${dbBackend === "pglite" ? "PGlite (local)" : "Supabase (cloud)"}`}
+                  title={`Database: ${dbBackend === "supabase" ? "Supabase (cloud)" : "SQLite (local)"}`}
                 >
-                  {dbBackend === "pglite" ? (
+                  {dbBackend === "supabase" ? (
                     <WifiOff size={12} className="text-amber-500" />
                   ) : (
                     <Wifi size={12} className="text-emerald-500" />
@@ -312,14 +312,14 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               {dbBackend && (
                 <div
                   className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-zinc-400 dark:text-zinc-600"
-                  title={`Database backend: ${dbBackend === "pglite" ? "PGlite (local/offline)" : "Supabase (cloud)"}`}
+                  title={`Database backend: ${dbBackend === "supabase" ? "Supabase (cloud)" : "SQLite (local/offline)"}`}
                 >
-                  {dbBackend === "pglite" ? (
+                  {dbBackend === "supabase" ? (
                     <WifiOff size={12} className="text-amber-500" />
                   ) : (
                     <Wifi size={12} className="text-emerald-500" />
                   )}
-                  <span className="flex-1">{dbBackend === "pglite" ? "PGlite (local)" : "Supabase"}</span>
+                  <span className="flex-1">{dbBackend === "supabase" ? "Supabase" : "SQLite (local)"}</span>
                 </div>
               )}
             </>

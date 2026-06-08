@@ -14,16 +14,16 @@ export function getMcpConfig(): McpConfig {
   if (app.isPackaged) {
     const resourcesPath = process.resourcesPath!;
     const serverPath = path.join(resourcesPath, "mcp-server", "server.js");
-    const dataDir = path.join(app.getPath("userData"), "pglite-data");
+    const dataDir = path.join(app.getPath("userData"), "foundry.db");
     const nodePath = path.join(resourcesPath, "app", "node_modules");
 
     return {
       serverPath,
       dataDir,
       nodePath,
-      command: ["node", serverPath, "--backend", "pglite"],
+      command: ["node", serverPath, "--backend", "sqlite"],
       environment: {
-        PGLITE_DATA_DIR: dataDir,
+        SQLITE_DATA_DIR: dataDir,
         NODE_PATH: nodePath,
       },
     };
@@ -39,15 +39,15 @@ export function getMcpConfig(): McpConfig {
     "dist",
     "server.js"
   );
-  const dataDir = path.resolve(__dirname, "..", "..", "..", "..", "..", ".pglite");
+  const dataDir = path.resolve(__dirname, "..", "..", "..", "..", "..", "foundry.db");
 
   return {
     serverPath,
     dataDir,
     nodePath: "",
-    command: ["node", serverPath, "--backend", "pglite"],
+    command: ["node", serverPath, "--backend", "sqlite"],
     environment: {
-      PGLITE_DATA_DIR: dataDir,
+      SQLITE_DATA_DIR: dataDir,
     },
   };
 }

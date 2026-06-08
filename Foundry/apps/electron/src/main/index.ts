@@ -18,19 +18,19 @@ if (!process.env.DATABASE_URL) {
 
 // Load persistent config from userData — overrides .env if present
 const savedConfig = loadConfig();
-if (savedConfig.database?.databaseUrl || savedConfig.database?.backend === "pglite") {
+if (savedConfig.database?.databaseUrl || savedConfig.database?.backend === "sqlite") {
   applyDatabaseConfig(savedConfig.database);
 }
 
 // If no Supabase URL is configured, auto-fallback to SQLite
-if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "pglite" && process.env.DATABASE_BACKEND !== "sqlite") {
+if (!process.env.DATABASE_URL && process.env.DATABASE_BACKEND !== "sqlite") {
   process.env.DATABASE_BACKEND = "sqlite";
   console.log("[Foundry] No DATABASE_URL found — defaulting to SQLite backend");
 }
 
 // SQLite data directory fallback — use OS user data dir for persistence
 function resolveLocalDataDir(): void {
-  if (process.env.DATABASE_BACKEND !== "pglite" && process.env.DATABASE_BACKEND !== "sqlite") return;
+  if (process.env.DATABASE_BACKEND !== "sqlite") return;
   if (!process.env.SQLITE_DATA_DIR) {
     const userData = app.getPath("userData");
     process.env.SQLITE_DATA_DIR = path.join(userData, "foundry.db");

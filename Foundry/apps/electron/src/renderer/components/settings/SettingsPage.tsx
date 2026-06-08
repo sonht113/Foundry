@@ -10,7 +10,7 @@ export function SettingsPage() {
   const setTheme = useUIStore((s) => s.setTheme);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
   const dbBackend = useUIStore((s) => s.dbBackend);
-  const [selectedBackend, setSelectedBackend] = useState<"supabase" | "pglite">(dbBackend ?? "supabase");
+  const [selectedBackend, setSelectedBackend] = useState<"supabase" | "sqlite">(dbBackend ?? "supabase");
   const [databaseUrl, setDatabaseUrl] = useState("");
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseKey, setSupabaseKey] = useState("");
@@ -25,7 +25,7 @@ export function SettingsPage() {
       if (cfg.database.databaseUrl) setDatabaseUrl(cfg.database.databaseUrl);
       if (cfg.database.supabaseUrl) setSupabaseUrl(cfg.database.supabaseUrl);
       if (cfg.database.supabaseKey) setSupabaseKey(cfg.database.supabaseKey);
-      if (cfg.database.backend) setSelectedBackend(cfg.database.backend as "supabase" | "pglite");
+      if (cfg.database.backend) setSelectedBackend(cfg.database.backend as "supabase" | "sqlite");
     }).catch(() => {});
   }, []);
 
@@ -53,8 +53,8 @@ export function SettingsPage() {
         supabaseUrl: supabaseUrl || undefined,
         supabaseKey: supabaseKey || undefined,
       });
-      if (selectedBackend === "pglite") {
-        setDataDir("Restart to apply PGlite.");
+      if (selectedBackend === "sqlite") {
+        setDataDir("Restart to apply.");
       }
       setPendingChange(true);
     } catch {
@@ -138,15 +138,15 @@ export function SettingsPage() {
                   Supabase
                 </button>
                 <button
-                  onClick={() => { setSelectedBackend("pglite"); setTestResult(null); setPendingChange(false); }}
+                  onClick={() => { setSelectedBackend("sqlite"); setTestResult(null); setPendingChange(false); }}
                   className={`flex flex-1 cursor-pointer items-center gap-2 rounded-lg border px-4 py-3 text-sm transition-all ${
-                    selectedBackend === "pglite"
+                    selectedBackend === "sqlite"
                       ? "border-indigo-500 bg-indigo-600/10 text-indigo-600 dark:text-indigo-300"
                       : "border-zinc-200 text-zinc-500 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-500"
                   }`}
                 >
                   <HardDrive size={16} />
-                  PGlite (Local)
+                  SQLite (Local)
                 </button>
               </div>
 
@@ -250,16 +250,16 @@ export function SettingsPage() {
                 </div>
               )}
 
-              {selectedBackend === "pglite" && (
+              {selectedBackend === "sqlite" && (
                 <div className="mt-3 space-y-3">
                   <p className="text-xs text-zinc-500">
-                    PGlite stores data locally in your user directory. No credentials needed.
+                    SQLite stores data locally in your user directory. No credentials needed.
                     {dataDir && <span className="mt-1 block text-amber-500">{dataDir}</span>}
                   </p>
                   {pendingChange && (
                     <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
                       <p className="text-xs text-amber-600 dark:text-amber-400">
-                        Switched to PGlite. Restart required.
+                        Switched to SQLite. Restart required.
                       </p>
                       <div className="flex gap-2">
                         <button

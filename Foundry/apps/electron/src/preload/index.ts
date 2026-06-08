@@ -116,14 +116,14 @@ const electronAPI = {
   },
   db: {
     getBackend: () => ipcRenderer.invoke("db:getBackend"),
-    switchBackend: (backend: "supabase" | "pglite") =>
+    switchBackend: (backend: "supabase" | "sqlite") =>
       ipcRenderer.invoke("db:switchBackend", backend),
     restartApp: () => ipcRenderer.invoke("db:restartApp"),
   },
   config: {
     get: () => ipcRenderer.invoke("config:get"),
     setDatabase: (db: {
-      backend: "supabase" | "pglite";
+      backend: "supabase" | "sqlite";
       databaseUrl?: string;
       supabaseUrl?: string;
       supabaseKey?: string;

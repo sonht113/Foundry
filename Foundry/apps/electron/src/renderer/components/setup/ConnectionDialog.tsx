@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useUIStore } from "../../stores/uiStore";
 
 interface Props {
-  onConnected: (backend: "supabase" | "pglite") => void;
+  onConnected: (backend: "supabase" | "sqlite") => void;
 }
 
-type SetupStep = "choose" | "supabase" | "pglite";
+type SetupStep = "choose" | "supabase" | "sqlite";
 
 export function ConnectionDialog({ onConnected }: Props) {
   const [step, setStep] = useState<SetupStep>("choose");
@@ -50,12 +50,12 @@ export function ConnectionDialog({ onConnected }: Props) {
     }
   }
 
-  async function handleSavePGlite() {
+  async function handleSaveSqlite() {
     setSaving(true);
     try {
-      await window.electronAPI.config.setDatabase({ backend: "pglite" });
-      setDbBackend("pglite");
-      onConnected("pglite");
+      await window.electronAPI.config.setDatabase({ backend: "sqlite" });
+      setDbBackend("sqlite");
+      onConnected("sqlite");
     } catch {
       setSaving(false);
     }
@@ -88,7 +88,7 @@ export function ConnectionDialog({ onConnected }: Props) {
           </button>
 
           <button
-            onClick={handleSavePGlite}
+            onClick={handleSaveSqlite}
             disabled={saving}
             className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 px-4 py-3 text-left transition-colors hover:border-emerald-500/50 hover:bg-emerald-50 dark:border-zinc-700 dark:hover:border-emerald-500/30 dark:hover:bg-emerald-500/5"
           >
@@ -98,8 +98,8 @@ export function ConnectionDialog({ onConnected }: Props) {
               <HardDrive size={20} className="text-emerald-500" />
             )}
             <div>
-              <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">PGlite</div>
-              <div className="text-xs text-zinc-500">Local embedded PostgreSQL — works offline</div>
+              <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">SQLite (Local)</div>
+              <div className="text-xs text-zinc-500">Local SQLite database — works offline</div>
             </div>
           </button>
         </div>

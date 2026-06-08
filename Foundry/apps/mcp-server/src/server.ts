@@ -68,7 +68,7 @@ async function main() {
     console.error("[Foundry MCP] Error: DATABASE_URL is required for Supabase backend.");
     console.error("  Set DATABASE_URL environment variable or pass --db-url <url>");
     console.error("  Get your connection string from Supabase Dashboard → Settings → Database.");
-    console.error("  Or switch to PGlite: DATABASE_BACKEND=pglite");
+    console.error("  Or switch to SQLite: DATABASE_BACKEND=sqlite");
     process.exit(1);
   }
 
