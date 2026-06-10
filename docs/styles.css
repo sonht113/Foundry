@@ -484,6 +484,21 @@ img { max-width: 100%; display: block; }
   font-weight: 500;
 }
 
+/* ===== Demo Video ===== */
+.demo-video {
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+}
+.demo-video video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* ===== MCP ===== */
 .mcp-grid {
   display: grid;
@@ -752,6 +767,7 @@ img { max-width: 100%; display: block; }
   .mcp-client-tab { width: auto; font-size: 0.8rem; padding: 0.5rem 0.75rem; }
 
   .features-grid { grid-template-columns: 1fr; }
+  .demo-video { max-width: 100%; }
   .screenshots-track { grid-template-columns: 1fr; }
   .download-grid { grid-template-columns: 1fr; }
 }
