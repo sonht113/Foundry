@@ -2,11 +2,17 @@ import { create } from "zustand";
 
 type Theme = "dark" | "light";
 type ToastType = "success" | "error" | "warning" | "info";
+type UpdateState = "idle" | "checking" | "available" | "downloading" | "downloaded" | "not-available" | "error";
 
 interface Toast {
   id: string;
   message: string;
   type: ToastType;
+}
+
+interface UpdateInfo {
+  version: string;
+  releaseNotes?: string;
 }
 
 interface UIState {
@@ -18,6 +24,8 @@ interface UIState {
   settingsOpen: boolean;
   terminalOpen: boolean;
   dbBackend: "sqlite" | null;
+  updateState: UpdateState;
+  updateInfo: UpdateInfo | null;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -30,6 +38,8 @@ interface UIState {
   setTerminalOpen: (open: boolean) => void;
   toggleTerminal: () => void;
   setDbBackend: (backend: "sqlite") => void;
+  setUpdateState: (state: UpdateState) => void;
+  setUpdateInfo: (info: UpdateInfo | null) => void;
 }
 
 let toastId = 0;
@@ -43,6 +53,8 @@ export const useUIStore = create<UIState>((set) => ({
   settingsOpen: false,
   terminalOpen: false,
   dbBackend: null,
+  updateState: "idle",
+  updateInfo: null,
 
   setTheme: (theme) => {
     set({ theme });
@@ -96,4 +108,6 @@ export const useUIStore = create<UIState>((set) => ({
   setTerminalOpen: (open) => set({ terminalOpen: open }),
   toggleTerminal: () => set((state) => ({ terminalOpen: !state.terminalOpen })),
   setDbBackend: (backend) => set({ dbBackend: backend }),
+  setUpdateState: (updateState) => set({ updateState }),
+  setUpdateInfo: (updateInfo) => set({ updateInfo }),
 }));

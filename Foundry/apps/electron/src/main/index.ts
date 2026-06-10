@@ -6,6 +6,7 @@ import { createProjectService, createColumnService, createTaskService, createTag
 import { app, BrowserWindow, net, protocol } from "electron";
 
 import { registerAllHandlers, registerEarlyHandlers, registerTerminalHandlers, setServices } from "@/main/ipc";
+import { initAutoUpdater } from "@/main/ipc/update.handler";
 
 app.name = "Foundry";
 
@@ -72,6 +73,8 @@ app.whenReady().then(async () => {
     setServices({ projectService, columnService, taskService, tagService, noteService, conversationService, settingRepo });
 
     console.log("[Foundry] Database connected successfully (backend: sqlite)");
+
+    initAutoUpdater();
   } catch (err) {
     console.error("[Foundry] Database connection failed:", err);
   }

@@ -129,6 +129,32 @@ const electronAPI = {
   clipboard: {
     write: (text: string) => ipcRenderer.invoke("clipboard:writeText", text),
   },
+  update: {
+    check: () => ipcRenderer.invoke("update:check"),
+    install: () => ipcRenderer.invoke("update:install"),
+    onChecking: (cb: () => void) => {
+      ipcRenderer.on("update:checking", () => cb());
+    },
+    onAvailable: (cb: (info: { version: string; releaseNotes?: string }) => void) => {
+      ipcRenderer.on("update:available", (_event, info) => cb(info));
+    },
+    onNotAvailable: (cb: () => void) => {
+      ipcRenderer.on("update:not-available", () => cb());
+    },
+    onDownloaded: (cb: () => void) => {
+      ipcRenderer.on("update:downloaded", () => cb());
+    },
+    onError: (cb: (error: { message: string }) => void) => {
+      ipcRenderer.on("update:error", (_event, error) => cb(error));
+    },
+    removeAllListeners: () => {
+      ipcRenderer.removeAllListeners("update:checking");
+      ipcRenderer.removeAllListeners("update:available");
+      ipcRenderer.removeAllListeners("update:not-available");
+      ipcRenderer.removeAllListeners("update:downloaded");
+      ipcRenderer.removeAllListeners("update:error");
+    },
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);

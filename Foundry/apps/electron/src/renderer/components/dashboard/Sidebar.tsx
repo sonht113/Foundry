@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Command, Hash, Home, Plus, Search, Settings, Terminal, Trash2, Wifi } from "lucide-react";
-import { useState } from "react";
+import { ArrowUpCircle, ChevronLeft, ChevronRight, Command, Download, Hash, Home, Plus, RefreshCw, Search, Settings, Terminal, Trash2, Wifi } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { useProjectStore } from "../../stores/projectStore";
 import { useTaskStore } from "../../stores/taskStore";
@@ -26,8 +26,10 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const setCurrentProject = useProjectStore((s) => s.setCurrentProject);
   const deleteProject = useProjectStore((s) => s.deleteProject);
+  const loadProjects = useProjectStore((s) => s.loadProjects);
   const loadTasks = useTaskStore((s) => s.loadTasks);
   const loadColumns = useTaskStore((s) => s.loadColumns);
+  const loading = useTaskStore((s) => s.loading);
   const setSelectedTask = useTaskStore((s) => s.setSelectedTask);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const setSearchOpen = useUIStore((s) => s.setSearchOpen);
@@ -36,6 +38,10 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const terminalOpen = useUIStore((s) => s.terminalOpen);
   const toggleTerminal = useUIStore((s) => s.toggleTerminal);
   const dbBackend = useUIStore((s) => s.dbBackend);
+  const updateState = useUIStore((s) => s.updateState);
+  const updateInfo = useUIStore((s) => s.updateInfo);
+  const setUpdateState = useUIStore((s) => s.setUpdateState);
+  const setUpdateInfo = useUIStore((s) => s.setUpdateInfo);
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -45,6 +51,19 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
     setCurrentProject(id);
     loadTasks(id);
     loadColumns(id);
+  }
+
+  async function handleReload() {
+    try {
+      await loadProjects();
+      if (currentProjectId) {
+        await Promise.all([loadTasks(currentProjectId), loadColumns(currentProjectId)]);
+      }
+      handleLoadCounts();
+      addToast("Data reloaded", "success");
+    } catch {
+      addToast("Failed to reload", "error");
+    }
   }
 
   async function handleLoadCounts() {
@@ -58,6 +77,34 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   useState(() => {
     handleLoadCounts();
   });
+
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api?.update) return;
+
+    api.update.onChecking(() => setUpdateState("checking"));
+    api.update.onAvailable((info) => {
+      setUpdateState("available");
+      setUpdateInfo(info);
+    });
+    api.update.onNotAvailable(() => setUpdateState("not-available"));
+    api.update.onDownloaded(() => {
+      setUpdateState("downloaded");
+    });
+    api.update.onError(() => setUpdateState("error"));
+
+    return () => {
+      api.update.removeAllListeners();
+    };
+  }, []);
+
+  async function handleInstallUpdate() {
+    try {
+      await window.electronAPI.update.install();
+    } catch {
+      addToast("Failed to install update", "error");
+    }
+  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -239,6 +286,14 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               >
                 <Settings size={14} />
               </button>
+              <button
+                onClick={handleReload}
+                disabled={loading}
+                className="flex w-full cursor-pointer items-center justify-center rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200/50 hover:text-zinc-700 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-300"
+                title="Reload data"
+              >
+                <RefreshCw size={14} />
+              </button>
               <ThemeToggle collapsed />
               <button
                 onClick={() => setSearchOpen(true)}
@@ -258,6 +313,15 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               >
                 <Terminal size={14} />
               </button>
+              {(updateState === "available" || updateState === "downloaded") && (
+                <button
+                  onClick={handleInstallUpdate}
+                  className="flex w-full cursor-pointer items-center justify-center rounded-md p-2 text-amber-500 transition-colors hover:bg-amber-500/10"
+                  title={`Update to v${updateInfo?.version}`}
+                >
+                  <ArrowUpCircle size={14} />
+                </button>
+              )}
               {dbBackend && (
                 <div
                   className="flex w-full cursor-default items-center justify-center rounded-md p-2"
@@ -275,6 +339,17 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               >
                 <Settings size={14} />
                 <span className="flex-1 text-left">Settings</span>
+              </button>
+              <button
+                onClick={handleReload}
+                disabled={loading}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-200/50 hover:text-zinc-700 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-300"
+              >
+                <RefreshCw size={14} />
+                <span className="flex-1 text-left">Reload Data</span>
+                <span className="flex items-center gap-0.5 text-[10px] text-zinc-400 dark:text-zinc-600">
+                  <Command size={10} />Shift+R
+                </span>
               </button>
               <ThemeToggle />
               <button
@@ -305,6 +380,20 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <Hash size={14} />
                 <span className="flex-1">Cmd+1-4 status</span>
               </div>
+              {(updateState === "available" || updateState === "downloaded") && (
+                <button
+                  onClick={handleInstallUpdate}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-amber-500 transition-colors hover:bg-amber-500/10"
+                >
+                  <Download size={14} />
+                  <span className="flex-1 text-left">
+                    {updateState === "downloaded" ? "Restart to update" : `Update v${updateInfo?.version}`}
+                  </span>
+                  <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-medium text-white">
+                    {updateState === "downloaded" ? "OK" : "New"}
+                  </span>
+                </button>
+              )}
               {dbBackend && (
                 <div
                   className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-zinc-400 dark:text-zinc-600"

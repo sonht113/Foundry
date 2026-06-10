@@ -29,3 +29,6 @@ win:
       arch: [x64]
   icon: assets/icon-256.png
   sign: null
+publish:
+  provider: github
+  releaseType: release

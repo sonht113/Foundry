@@ -109,6 +109,16 @@ interface ElectronAPI {
   clipboard: {
     write: (text: string) => Promise<{ success: boolean }>;
   };
+  update: {
+    check: () => Promise<{ success: boolean; version?: string; reason?: string }>;
+    install: () => Promise<{ success: boolean }>;
+    onChecking: (cb: () => void) => void;
+    onAvailable: (cb: (info: { version: string; releaseNotes?: string }) => void) => void;
+    onNotAvailable: (cb: () => void) => void;
+    onDownloaded: (cb: () => void) => void;
+    onError: (cb: (error: { message: string }) => void) => void;
+    removeAllListeners: () => void;
+  };
 }
 
 interface Project {
