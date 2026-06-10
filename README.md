@@ -2,6 +2,15 @@
 
 An AI-native task manager where **both humans (UI) and AI agents (MCP) are first-class citizens**. Built on SQLite (local-first, persisted to disk).
 
+<div align="center">
+  <a href="https://sonht113.github.io/Foundry/" target="_blank">
+    <img src="https://img.shields.io/badge/Landing%20Page-sonht113.github.io/Foundry-6366F1?style=for-the-badge&logo=github" alt="Landing Page" />
+  </a>
+  <a href="https://github.com/sonht113/Foundry/releases" target="_blank">
+    <img src="https://img.shields.io/github/v/release/sonht113/Foundry?style=for-the-badge&color=f59e0b" alt="Latest Release" />
+  </a>
+</div>
+
 ## Screenshots
 
 <div align="center">
