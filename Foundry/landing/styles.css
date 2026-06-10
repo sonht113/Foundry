@@ -86,7 +86,10 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.05em;
   color: var(--text);
 }
-.nav-logo svg { flex-shrink: 0; }
+.nav-logo-icon {
+  flex-shrink: 0;
+  border-radius: 0.4rem;
+}
 .nav-links {
   display: flex;
   align-items: center;
@@ -651,7 +654,10 @@ img { max-width: 100%; display: block; }
   font-size: 1.3rem;
   letter-spacing: 0.05em;
 }
-.footer-brand svg { flex-shrink: 0; }
+.footer-logo-icon {
+  flex-shrink: 0;
+  border-radius: 0.35rem;
+}
 .footer-version {
   font-family: var(--font-mono);
   font-size: 0.7rem;
