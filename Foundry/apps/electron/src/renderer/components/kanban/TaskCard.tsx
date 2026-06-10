@@ -1,10 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { isTaskOverdue } from "@foundry/shared";
 import { AlertTriangle, CalendarDays, Clock, User } from "lucide-react";
 
 import { TASK_PRIORITY_LABELS, PRIORITY_COLORS } from "../../lib/constants";
-import { formatSafeDate } from "../../lib/formatDate";
+import { formatSafeDate, isTaskOverdue } from "../../lib/formatDate";
 
 interface Task {
   id: string;
@@ -66,11 +65,13 @@ export function TaskCard({ task, isOverlay }: CardProps) {
               {task.estimateHours}h
             </span>
           )}
-          {overdue && (
-            <span className="rounded bg-red-100 px-1.5 py-0.5 font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
-              Overdue
-            </span>
-          )}
+        </div>
+      )}
+      {overdue && (
+        <div className="mt-1.5">
+          <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            Overdue
+          </span>
         </div>
       )}
     </div>
@@ -131,11 +132,13 @@ export function SortableTaskCard({ task, onClick }: SortableProps) {
                 {task.estimateHours}h
               </span>
             )}
-            {overdue && (
-              <span className="rounded bg-red-100 px-1.5 py-0.5 font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                Overdue
-              </span>
-            )}
+          </div>
+        )}
+        {overdue && (
+          <div className="mt-1.5">
+            <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+              Overdue
+            </span>
           </div>
         )}
       </div>
