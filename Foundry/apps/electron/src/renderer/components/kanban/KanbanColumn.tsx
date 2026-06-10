@@ -107,7 +107,7 @@ export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }
   return (
     <div
       ref={setNodeRef}
-      className={`group flex w-60 shrink-0 flex-col rounded-xl border transition-all duration-200 ${
+      className={`group flex h-full w-60 shrink-0 flex-col rounded-xl border transition-all duration-200 min-h-0 ${
         isOver
           ? "border-indigo-500 bg-indigo-500/5 shadow-lg shadow-indigo-500/10"
           : "border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-950/50"
@@ -178,26 +178,29 @@ export function KanbanColumn({ id, label, color, tasks, projectId, onTaskClick }
       </div>
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 space-y-1.5 p-2">
-          {tasks.map((task) => (
-            <SortableTaskCard key={task.id} task={task} onClick={() => onTaskClick(task.id)} />
-          ))}
-          {tasks.length === 0 && (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-10 text-zinc-400 transition-colors dark:border-zinc-800 dark:text-zinc-700">
-              <GripVertical size={16} className="mb-1 opacity-40" />
-              <span className="text-[11px]">Drop here</span>
-            </div>
-          )}
-
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:text-zinc-600 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-400"
-          >
-            <Plus size={12} />
-            Add task
-          </button>
-        </div>
+        {tasks.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 text-zinc-400 transition-colors dark:border-zinc-800 dark:text-zinc-700 mx-2 mt-2">
+            <GripVertical size={16} className="mb-1 opacity-40" />
+            <span className="text-[11px]">Drop here</span>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 space-y-1.5">
+            {tasks.map((task) => (
+              <SortableTaskCard key={task.id} task={task} onClick={() => onTaskClick(task.id)} />
+            ))}
+          </div>
+        )}
       </SortableContext>
+
+      <div className="shrink-0 px-2 pb-2">
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:text-zinc-600 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-400"
+        >
+          <Plus size={12} />
+          Add task
+        </button>
+      </div>
 
       <ConfirmModal
         open={showDeleteConfirm}

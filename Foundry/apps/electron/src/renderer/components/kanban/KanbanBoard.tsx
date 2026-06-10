@@ -123,7 +123,7 @@ export const KanbanBoard = forwardRef<HTMLDivElement>(function KanbanBoard(_prop
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div ref={ref} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+      <div ref={ref} className="flex h-full gap-3 overflow-x-auto scrollbar-hide pb-2">
         {columns.map((col) => (
           <KanbanColumn
             key={col.id}
