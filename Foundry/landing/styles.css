@@ -218,12 +218,12 @@ img { max-width: 100%; display: block; }
 .hero-title {
   font-family: var(--font-display);
   font-size: clamp(3.5rem, 8vw, 6.5rem);
-  line-height: 0.95;
+  line-height: 1.1;
   letter-spacing: 0.02em;
   margin-bottom: 1.5rem;
+  word-break: keep-all;
 }
-.hero-title-line { display: block; }
-.hero-title-line.accent {
+.accent-inline {
   background: linear-gradient(135deg, var(--accent), var(--accent-glow));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
