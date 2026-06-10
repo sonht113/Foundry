@@ -95,7 +95,7 @@ export function SettingsPage() {
                   <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     Foundry
                   </h3>
-                  <p className="text-xs text-zinc-500">v0.2.1</p>
+                  <p className="text-xs text-zinc-500">v0.3.0</p>
                 </div>
               </div>
               <p className="text-xs leading-relaxed text-zinc-500">
