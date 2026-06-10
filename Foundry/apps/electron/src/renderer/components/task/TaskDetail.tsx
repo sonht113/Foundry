@@ -1,4 +1,5 @@
-import { CalendarDays, Clock3, GripVertical, MessageSquare, Paperclip, Play, StickyNote, User, X } from "lucide-react";
+import { isTaskOverdue } from "@foundry/shared";
+import { AlertTriangle, CalendarDays, Clock3, GripVertical, MessageSquare, Paperclip, Play, StickyNote, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, PRIORITY_COLORS } from "../../lib/constants";
@@ -186,6 +187,17 @@ export function TaskDetail() {
           ))}
         </div>
 
+        {/* Overdue Warning */}
+        {isTaskOverdue(task) && (
+          <div className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950/40">
+            <AlertTriangle size={14} className="shrink-0 text-red-500 dark:text-red-400" />
+            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+              This task is overdue
+              {task.endDate ? ` — due ${formatSafeDate(task.endDate)}` : ""}
+            </span>
+          </div>
+        )}
+
         {/* Title */}
         {editingTitle ? (
           <input
@@ -260,8 +272,12 @@ export function TaskDetail() {
 
           {/* End Date */}
           <div className="flex items-center gap-2 text-sm">
-            <CalendarDays size={14} className="shrink-0 text-zinc-400 dark:text-zinc-600" />
-            <span className="w-16 text-xs text-zinc-500 dark:text-zinc-500">End</span>
+            {isTaskOverdue(task) ? (
+              <AlertTriangle size={14} className="shrink-0 text-red-500" />
+            ) : (
+              <CalendarDays size={14} className="shrink-0 text-zinc-400 dark:text-zinc-600" />
+            )}
+            <span className={`w-16 text-xs ${isTaskOverdue(task) ? "font-semibold text-red-500" : "text-zinc-500 dark:text-zinc-500"}`}>End</span>
             <input
               type="date"
               value={task.endDate ? task.endDate.slice(0, 10) : ""}
@@ -271,7 +287,7 @@ export function TaskDetail() {
                   addToast(err.message, "error")
                 );
               }}
-              className="cursor-pointer rounded border border-zinc-300 bg-white px-2 py-0.5 text-xs text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              className={`cursor-pointer rounded border bg-white px-2 py-0.5 text-xs text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 ${isTaskOverdue(task) ? "border-red-400 dark:border-red-700" : "border-zinc-300 dark:border-zinc-700"}`}
             />
           </div>
 

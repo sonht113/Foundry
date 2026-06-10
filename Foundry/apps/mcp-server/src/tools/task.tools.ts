@@ -18,7 +18,14 @@ export function registerTaskTools(server: any, taskService: any) {
       for (const t of tasks) {
         const key = t.status || "todo";
         if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(`  [${t.id}] ${t.title} (${t.priority})`);
+        let line = `  [${t.id}] ${t.title} (${t.priority})`;
+        if (t.endDate) {
+          const dueLabel = new Date(t.endDate).getTime() < new Date().setHours(0, 0, 0, 0) && t.status !== "done"
+            ? "OVERDUE"
+            : t.endDate.slice(0, 10);
+          line += ` | Due: ${dueLabel}`;
+        }
+        grouped[key].push(line);
       }
       const lines: string[] = [];
       for (const [status, items] of Object.entries(grouped)) {
@@ -43,6 +50,7 @@ export function registerTaskTools(server: any, taskService: any) {
       const task = await taskService.getById(id);
       const tags = await taskService.getTags(id);
       const tagsStr = tags.length > 0 ? `\n  Tags: ${tags.map((t: any) => t.name).join(", ")}` : "";
+      const dueStr = task.endDate ? `\n  Due: ${task.endDate}` : "";
       return {
         content: [
           {
@@ -50,7 +58,8 @@ export function registerTaskTools(server: any, taskService: any) {
             text:
               `[${task.id}] ${task.title}\n` +
               `  Status: ${task.status} | Priority: ${task.priority} | Assignee: ${task.assignee || "unassigned"}\n` +
-              `  Created: ${task.created_at} | Updated: ${task.updated_at}` +
+              `  Created: ${task.createdAt} | Updated: ${task.updatedAt}` +
+              dueStr +
               tagsStr +
               (task.description ? `\n  Description: ${task.description}` : ""),
           },
@@ -202,6 +211,7 @@ export function registerTaskTools(server: any, taskService: any) {
         projectId: z.string().optional().describe("Limit search to a project"),
         status: z.string().optional().describe("Filter by status column ID"),
         priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+        overdue: z.boolean().optional().describe("Only return overdue tasks (past end_date, not done)"),
         limit: z.number().optional().default(20),
       },
     },
@@ -210,20 +220,23 @@ export function registerTaskTools(server: any, taskService: any) {
       projectId,
       status,
       priority,
+      overdue,
       limit,
     }: {
       query: string;
       projectId?: string;
       status?: string;
       priority?: string;
+      overdue?: boolean;
       limit?: number;
     }) => {
-      const tasks = await taskService.search({ query, projectId, status, priority, limit });
+      const tasks = await taskService.search({ query, projectId, status, priority, overdue, limit });
       if (tasks.length === 0) {
-        return { content: [{ type: "text" as const, text: `No tasks found for "${query}".` }] };
+        const desc = overdue ? ` overdue` : "";
+        return { content: [{ type: "text" as const, text: `No${desc} tasks found for "${query}".` }] };
       }
       const formatted = tasks
-        .map((t: any) => `[${t.id}] ${t.title} (${t.status}/${t.priority})`)
+        .map((t: any) => `[${t.id}] ${t.title} (${t.status}/${t.priority}${t.endDate ? " | due: " + t.endDate : ""})`)
         .join("\n");
       return {
         content: [

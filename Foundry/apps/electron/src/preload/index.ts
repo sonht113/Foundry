@@ -47,6 +47,7 @@ const electronAPI = {
       projectId?: string;
       status?: string;
       priority?: string;
+      overdue?: boolean;
       limit?: number;
     }) => ipcRenderer.invoke("task:search", data),
     getTags: (taskId: string) => ipcRenderer.invoke("task:tags", taskId),

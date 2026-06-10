@@ -51,6 +51,7 @@ interface ElectronAPI {
       projectId?: string;
       status?: string;
       priority?: string;
+      overdue?: boolean;
       limit?: number;
     }) => Promise<Task[]>;
     getTags: (taskId: string) => Promise<Tag[]>;

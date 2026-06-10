@@ -29,6 +29,7 @@ export interface SearchTasksInput {
   projectId?: string;
   status?: string;
   priority?: string;
+  overdue?: boolean;
   limit?: number;
 }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isTaskOverdue } from "@foundry/shared";
 
 export function registerAITools(server: any, projectService: any, taskService: any) {
   server.registerTool(
@@ -63,6 +64,15 @@ export function registerAITools(server: any, projectService: any, taskService: a
         analysis.push("### Stalled Tasks (>7 days without update)");
         stalled.forEach((t: any) => {
           analysis.push(`  [${t.id}] ${t.title}`);
+        });
+      }
+
+      const overdue = tasks.filter((t: any) => isTaskOverdue(t));
+      if (overdue.length > 0) {
+        analysis.push("");
+        analysis.push("### Overdue Tasks (past deadline, not done)");
+        overdue.forEach((t: any) => {
+          analysis.push(`  [${t.id}] ${t.title} — Due: ${t.endDate?.slice(0, 10) ?? "?"} | Status: ${t.status}`);
         });
       }
 

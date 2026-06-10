@@ -27,6 +27,11 @@ export interface Task {
   updatedAt: string;
 }
 
+export function isTaskOverdue(task: Pick<Task, "endDate" | "status">): boolean {
+  if (!task.endDate || task.status === "done") return false;
+  return new Date(task.endDate).getTime() < new Date().setHours(0, 0, 0, 0);
+}
+
 export interface Column {
   id: string;
   projectId: string;

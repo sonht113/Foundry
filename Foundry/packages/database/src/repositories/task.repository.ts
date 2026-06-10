@@ -270,6 +270,9 @@ export class TaskRepository implements ITaskRepository {
       params.push(input.priority);
       paramIdx++;
     }
+    if (input.overdue) {
+      sql += ` AND end_date IS NOT NULL AND end_date < date('now') AND status != 'done'`;
+    }
 
     sql += ` ORDER BY updated_at DESC LIMIT $${paramIdx}`;
     params.push(limit);
