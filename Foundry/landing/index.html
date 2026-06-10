@@ -1,38 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Foundry — AI-Native Task Manager</title>
+  <title data-lang-en="Foundry — AI-Native Task Manager" data-lang-vi="Foundry — Trình Quản Lý Công Việc AI">Foundry — AI-Native Task Manager</title>
   <meta name="description" content="Foundry is an AI-native task manager where humans and AI agents collaborate seamlessly. Built on local SQLite, fully offline, with MCP server for AI integration." />
   <meta property="og:title" content="Foundry — AI-Native Task Manager" />
   <meta property="og:description" content="Where humans and AI agents forge tasks together." />
   <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" href="assets/icon-256.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Ember particles container -->
   <canvas id="particles" aria-hidden="true"></canvas>
 
   <!-- Navigation -->
   <nav class="nav" id="nav">
     <div class="nav-inner">
       <a href="#" class="nav-logo">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2.5" />
-          <path d="M8 20V8l6 8V8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M18 8v12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="nav-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6366F1" />
+              <stop offset="100%" stopColor="#8B5CF6" />
+            </linearGradient>
+          </defs>
+          <rect x="14" y="28" width="72" height="72" rx="12" transform="rotate(45 50 64)" fill="url(#nav-logo-grad)" />
+          <g transform="translate(36, 38)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M0 1 V 24" stroke-width="4.5" />
+            <path d="M0 1 H 22" stroke-width="4.5" />
+            <path d="M0 12 H 16" stroke-width="4.5" />
+          </g>
+          <circle cx="72" cy="18" r="3" fill="#A78BFA" opacity="0.85" />
         </svg>
         <span>Foundry</span>
       </a>
       <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#screenshots">Screenshots</a>
-        <a href="#mcp">MCP</a>
-        <a href="#download" class="nav-cta">Download</a>
+        <a href="#features" data-lang-en="Features" data-lang-vi="Tính Năng">Features</a>
+        <a href="#screenshots" data-lang-en="Screenshots" data-lang-vi="Ảnh Chụp">Screenshots</a>
+        <a href="#mcp" data-lang-en="MCP" data-lang-vi="MCP">MCP</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Toggle language" title="Switch language">
+          <span class="lang-option" data-lang="en">EN</span>
+          <span class="lang-divider">/</span>
+          <span class="lang-option active" data-lang="vi">VI</span>
+        </button>
+        <a href="#download" class="nav-cta" data-lang-en="Download" data-lang-vi="Tải Về">Download</a>
       </div>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
         <span></span><span></span><span></span>
@@ -45,21 +60,22 @@
     <div class="hero-content">
       <div class="hero-badge reveal">
         <span class="pulse-dot"></span>
-        Now with Auto-Update &mdash; v0.3.0
+        <span data-lang-en="Now with Auto-Update — v0.3.0" data-lang-vi="Tự động cập nhật — v0.3.0">Now with Auto-Update — v0.3.0</span>
       </div>
       <h1 class="hero-title reveal" data-delay="100">
-        <span class="hero-title-line">Where Humans &amp;</span>
-        <span class="hero-title-line accent">AI Agents Forge</span>
-        <span class="hero-title-line">Tasks Together</span>
+        <span class="hero-title-line" data-lang-en="Where Humans &amp;" data-lang-vi="Nơi Con Người &amp;">Where Humans &amp;</span>
+        <span class="hero-title-line accent" data-lang-en="AI Agents Forge" data-lang-vi="AI Cùng Rèn Luyện">AI Agents Forge</span>
+        <span class="hero-title-line" data-lang-en="Tasks Together" data-lang-vi="Công Việc">Tasks Together</span>
       </h1>
-      <p class="hero-sub reveal" data-delay="300">
-        Foundry is the AI-native task manager. Kanban boards for humans. MCP server for AI agents. 
-        One shared workspace, powered by local SQLite. Works offline. Your data stays yours.
+      <p class="hero-sub reveal" data-delay="300"
+        data-lang-en="Foundry is the AI-native task manager. Kanban boards for humans. MCP server for AI agents. One shared workspace, powered by local SQLite. Works offline. Your data stays yours."
+        data-lang-vi="Foundry là trình quản lý công việc AI-native. Bảng Kanban cho con người. MCP server cho AI agents. Một không gian làm việc chung, chạy trên SQLite cục bộ. Hoạt động offline. Dữ liệu của bạn ở lại máy bạn.">
+        Foundry is the AI-native task manager. Kanban boards for humans. MCP server for AI agents. One shared workspace, powered by local SQLite. Works offline. Your data stays yours.
       </p>
       <div class="hero-actions reveal" data-delay="400">
         <a href="#download" class="btn btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download v0.3.0
+          <span data-lang-en="Download v0.3.0" data-lang-vi="Tải v0.3.0">Download v0.3.0</span>
         </a>
         <a href="https://github.com/sonht113/Foundry" target="_blank" class="btn btn-secondary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -68,7 +84,6 @@
       </div>
     </div>
 
-    <!-- Terminal Preview -->
     <div class="hero-terminal reveal" data-delay="500">
       <div class="terminal-header">
         <span class="terminal-dot dot-red"></span>
@@ -81,10 +96,10 @@
         <div class="terminal-line dim"><span class="prompt accent">foundry:</span> Connected to Foundry (sqlite)</div>
         <div class="terminal-line"><span class="prompt">$</span> generate_tasks_from_prompt "Build auth system"</div>
         <div class="terminal-line dim"><span class="prompt accent">foundry:</span> Generated 4 tasks:</div>
-        <div class="terminal-line dim">  task_Lk8x: "Design login page" &mdash; priority: high</div>
-        <div class="terminal-line dim">  task_Mn9y: "Implement JWT auth" &mdash; priority: critical</div>
-        <div class="terminal-line dim">  task_Np0z: "Add user roles" &mdash; priority: medium</div>
-        <div class="terminal-line dim">  task_Oq1a: "Write auth tests" &mdash; priority: medium</div>
+        <div class="terminal-line dim">  task_Lk8x: "Design login page" — priority: high</div>
+        <div class="terminal-line dim">  task_Mn9y: "Implement JWT auth" — priority: critical</div>
+        <div class="terminal-line dim">  task_Np0z: "Add user roles" — priority: medium</div>
+        <div class="terminal-line dim">  task_Oq1a: "Write auth tests" — priority: medium</div>
         <div class="terminal-line"><span class="prompt">$</span> <span class="cursor">&#9608;</span></div>
       </div>
     </div>
@@ -95,9 +110,9 @@
   <!-- Features -->
   <section class="section" id="features">
     <div class="section-header reveal">
-      <span class="section-tag">Capabilities</span>
-      <h2>Built for Both Worlds</h2>
-      <p>Humans drag cards. AI agents call tools. Same source of truth.</p>
+      <span class="section-tag" data-lang-en="Capabilities" data-lang-vi="Tính Năng">Capabilities</span>
+      <h2 data-lang-en="Built for Both Worlds" data-lang-vi="Xây Dựng Cho Cả Hai Thế Giới">Built for Both Worlds</h2>
+      <p data-lang-en="Humans drag cards. AI agents call tools. Same source of truth." data-lang-vi="Con người kéo thẻ. AI gọi tools. Cùng một nguồn dữ liệu.">Humans drag cards. AI agents call tools. Same source of truth.</p>
     </div>
     <div class="features-grid">
       <div class="feature-card reveal" data-delay="0">
@@ -105,28 +120,28 @@
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         </div>
         <h3>Kanban Boards</h3>
-        <p>Drag-and-drop columns with customizable workflows. Todo &rarr; Doing &rarr; Review &rarr; Done. Assign priorities, dates, tags, and notes.</p>
+        <p data-lang-en="Drag-and-drop columns with customizable workflows. Todo → Doing → Review → Done. Assign priorities, dates, tags, and notes." data-lang-vi="Kéo thả cột với quy trình tùy chỉnh. Việc Cần Làm → Đang Làm → Xem Lại → Xong. Gán độ ưu tiên, ngày, thẻ, và ghi chú.">Drag-and-drop columns with customizable workflows. Todo → Doing → Review → Done. Assign priorities, dates, tags, and notes.</p>
       </div>
       <div class="feature-card reveal" data-delay="100">
         <div class="feature-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </div>
         <h3>MCP Protocol</h3>
-        <p>28 tools exposed via stdio transport. AI agents can create, update, search, and analyze tasks natively. OpenCode, Claude, Cursor, Copilot ready.</p>
+        <p data-lang-en="28 tools exposed via stdio transport. AI agents can create, update, search, and analyze tasks natively. OpenCode, Claude, Cursor, Copilot ready." data-lang-vi="28 công cụ qua stdio transport. AI agents có thể tạo, cập nhật, tìm kiếm, và phân tích task. Sẵn sàng cho OpenCode, Claude, Cursor, Copilot.">28 tools exposed via stdio transport. AI agents can create, update, search, and analyze tasks natively. OpenCode, Claude, Cursor, Copilot ready.</p>
       </div>
       <div class="feature-card reveal" data-delay="200">
         <div class="feature-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 100 4h4a2 2 0 110 4H8"/><path d="M12 6v2"/><path d="M12 16v2"/></svg>
         </div>
         <h3>Local-First</h3>
-        <p>All data in a single SQLite file on disk. No cloud services. No accounts. Fully offline. Your data never leaves your machine.</p>
+        <p data-lang-en="All data in a single SQLite file on disk. No cloud services. No accounts. Fully offline. Your data never leaves your machine." data-lang-vi="Tất cả dữ liệu trong một file SQLite trên ổ cứng. Không cần cloud. Không cần tài khoản. Hoàn toàn offline. Dữ liệu của bạn không bao giờ rời khỏi máy.">All data in a single SQLite file on disk. No cloud services. No accounts. Fully offline. Your data never leaves your machine.</p>
       </div>
       <div class="feature-card reveal" data-delay="300">
         <div class="feature-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="6" y1="16" x2="8" y2="16"/><line x1="12" y1="12" x2="18" y2="12"/></svg>
         </div>
         <h3>Keyboard-First</h3>
-        <p>Cmd+K search, Cmd+1-4 status moves, Cmd+N new task, Cmd+Shift+R reload, Cmd+B sidebar. Every action has a shortcut.</p>
+        <p data-lang-en="Cmd+K search, Cmd+1-4 status moves, Cmd+N new task, Cmd+Shift+R reload, Cmd+B sidebar. Every action has a shortcut." data-lang-vi="Cmd+K tìm kiếm, Cmd+1-4 đổi trạng thái, Cmd+N task mới, Cmd+Shift+R tải lại, Cmd+B sidebar. Mọi thao tác đều có phím tắt.">Cmd+K search, Cmd+1-4 status moves, Cmd+N new task, Cmd+Shift+R reload, Cmd+B sidebar. Every action has a shortcut.</p>
       </div>
     </div>
   </section>
@@ -134,11 +149,11 @@
   <!-- Screenshots -->
   <section class="section section-alt" id="screenshots">
     <div class="section-header reveal">
-      <span class="section-tag">Interface</span>
-      <h2>Beautiful by Default</h2>
-      <p>Dark &amp; light themes. Responsive Kanban. Built-in terminal.</p>
+      <span class="section-tag" data-lang-en="Interface" data-lang-vi="Giao Diện">Interface</span>
+      <h2 data-lang-en="Beautiful by Default" data-lang-vi="Đẹp Mặc Định">Beautiful by Default</h2>
+      <p data-lang-en="Dark &amp; light themes. Responsive Kanban. Built-in terminal." data-lang-vi="Theme sáng &amp; tối. Kanban responsive. Terminal tích hợp.">Dark &amp; light themes. Responsive Kanban. Built-in terminal.</p>
     </div>
-    <div class="screenshots-track" id="screenshotsTrack">
+    <div class="screenshots-track">
       <div class="screenshot-item reveal">
         <div class="screenshot-frame">
           <div class="screenshot-titlebar">
@@ -178,9 +193,9 @@
   <!-- MCP Integration -->
   <section class="section" id="mcp">
     <div class="section-header reveal">
-      <span class="section-tag">AI Integration</span>
-      <h2>Connect Any MCP Client</h2>
-      <p>Universal stdio transport. One config works across 6+ AI platforms.</p>
+      <span class="section-tag" data-lang-en="AI Integration" data-lang-vi="Tích Hợp AI">AI Integration</span>
+      <h2 data-lang-en="Connect Any MCP Client" data-lang-vi="Kết Nối Mọi MCP Client">Connect Any MCP Client</h2>
+      <p data-lang-en="Universal stdio transport. One config works across 6+ AI platforms." data-lang-vi="Stdio transport phổ quát. Một config dùng được trên 6+ nền tảng AI.">Universal stdio transport. One config works across 6+ AI platforms.</p>
     </div>
     <div class="mcp-grid reveal">
       <div class="mcp-clients">
@@ -192,7 +207,8 @@
       <div class="mcp-code">
         <div class="mcp-code-header">
           <span class="mcp-code-lang" id="mcpLang">opencode.json</span>
-          <button class="mcp-copy-btn" id="mcpCopyBtn" title="Copy config">
+          <button class="mcp-copy-btn" id="mcpCopyBtn" title="Copy config"
+            data-lang-en="Copy" data-lang-vi="Sao Chép">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy
           </button>
@@ -213,9 +229,9 @@
   <!-- Download -->
   <section class="section section-alt" id="download">
     <div class="section-header reveal">
-      <span class="section-tag">Get Started</span>
-      <h2>Download Foundry</h2>
-      <p>Free and open-source. Cross-platform. No sign-up.</p>
+      <span class="section-tag" data-lang-en="Get Started" data-lang-vi="Bắt Đầu">Get Started</span>
+      <h2 data-lang-en="Download Foundry" data-lang-vi="Tải Foundry">Download Foundry</h2>
+      <p data-lang-en="Free and open-source. Cross-platform. No sign-up." data-lang-vi="Miễn phí và mã nguồn mở. Đa nền tảng. Không cần đăng ký.">Free and open-source. Cross-platform. No sign-up.</p>
     </div>
     <div class="download-grid reveal" id="downloadGrid">
       <a href="https://github.com/sonht113/Foundry/releases/download/v0.3.0/Foundry.Setup.0.3.0.exe" class="download-card" data-platform="windows">
@@ -226,25 +242,27 @@
         <span class="download-badge">NSIS Installer</span>
         <span class="download-arrow">&darr;</span>
       </a>
-      <a href="https://github.com/sonht113/Foundry/releases/download/v0.3.0/Foundry-0.3.0.AppImage" class="download-card" data-platform="linux">
+      <div class="download-card disabled" data-platform="linux" role="button" aria-disabled="true">
         <div class="download-icon">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12l4 4 4-4"/></svg>
         </div>
         <h3>Linux</h3>
         <span class="download-badge">AppImage x64</span>
-        <span class="download-arrow">&darr;</span>
-      </a>
-      <a href="https://github.com/sonht113/Foundry/releases/download/v0.3.0/Foundry-0.3.0-arm64.dmg" class="download-card" data-platform="mac">
+        <span class="coming-soon" data-lang-en="Coming Soon" data-lang-vi="Sắp Ra Mắt">Coming Soon</span>
+      </div>
+      <div class="download-card disabled" data-platform="mac" role="button" aria-disabled="true">
         <div class="download-icon">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 2l-5 5-5-5"/><rect x="4" y="7" width="16" height="11" rx="2"/></svg>
         </div>
         <h3>macOS</h3>
         <span class="download-badge">DMG ARM64</span>
-        <span class="download-arrow">&darr;</span>
-      </a>
+        <span class="coming-soon" data-lang-en="Coming Soon" data-lang-vi="Sắp Ra Mắt">Coming Soon</span>
+      </div>
     </div>
     <p class="download-note reveal">
-      Also available on <a href="https://github.com/sonht113/Foundry/releases" target="_blank">GitHub Releases</a> &mdash; scroll for past versions.
+      <span data-lang-en="Also available on" data-lang-vi="Cũng có sẵn trên">Also available on</span>
+      <a href="https://github.com/sonht113/Foundry/releases" target="_blank">GitHub Releases</a>
+      <span data-lang-en="— scroll for past versions." data-lang-vi="— xem các phiên bản trước.">— scroll for past versions.</span>
     </p>
   </section>
 
@@ -252,10 +270,20 @@
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-          <rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2.5" />
-          <path d="M8 20V8l6 8V8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M18 8v12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="footer-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6366F1" />
+              <stop offset="100%" stopColor="#8B5CF6" />
+            </linearGradient>
+          </defs>
+          <rect x="14" y="28" width="72" height="72" rx="12" transform="rotate(45 50 64)" fill="url(#footer-logo-grad)" />
+          <g transform="translate(36, 38)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M0 1 V 24" stroke-width="4.5" />
+            <path d="M0 1 H 22" stroke-width="4.5" />
+            <path d="M0 12 H 16" stroke-width="4.5" />
+          </g>
+          <circle cx="72" cy="18" r="3" fill="#A78BFA" opacity="0.85" />
         </svg>
         <span>Foundry</span>
         <span class="footer-version">v0.3.0</span>
