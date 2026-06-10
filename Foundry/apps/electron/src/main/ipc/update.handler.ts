@@ -101,4 +101,8 @@ export function registerUpdateHandlers(): void {
       releaseNotes: lastUpdateInfo?.releaseNotes,
     };
   });
+
+  ipcMain.handle("app:getVersion", async () => {
+    return { version: app.getVersion() };
+  });
 }

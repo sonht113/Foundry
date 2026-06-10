@@ -1,4 +1,5 @@
 import { ArrowLeft, Code2, HardDrive, Info, Monitor, Moon, PlugZap, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { useUIStore } from "../../stores/uiStore";
 
@@ -8,6 +9,13 @@ export function SettingsPage() {
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
+  const [appVersion, setAppVersion] = useState("...");
+
+  useEffect(() => {
+    window.electronAPI?.getVersion?.().then((res) => {
+      if (res?.version) setAppVersion(res.version);
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -95,7 +103,7 @@ export function SettingsPage() {
                   <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     Foundry
                   </h3>
-                  <p className="text-xs text-zinc-500">v0.3.0</p>
+                  <p className="text-xs text-zinc-500">v{appVersion}</p>
                 </div>
               </div>
               <p className="text-xs leading-relaxed text-zinc-500">

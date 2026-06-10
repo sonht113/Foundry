@@ -130,6 +130,7 @@ const electronAPI = {
   clipboard: {
     write: (text: string) => ipcRenderer.invoke("clipboard:writeText", text),
   },
+  getVersion: () => ipcRenderer.invoke("app:getVersion"),
   update: {
     check: () => ipcRenderer.invoke("update:check"),
     install: () => ipcRenderer.invoke("update:install"),

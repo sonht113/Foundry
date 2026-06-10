@@ -122,6 +122,7 @@ interface ElectronAPI {
     onError: (cb: (error: { message: string }) => void) => void;
     removeAllListeners: () => void;
   };
+  getVersion: () => Promise<{ version: string }>;
 }
 
 interface Project {
