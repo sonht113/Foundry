@@ -130,7 +130,7 @@ export class TaskRepository implements ITaskRepository {
 
       await client.query("COMMIT");
     } catch (err) {
-      await client.query("ROLLBACK");
+      try { await client.query("ROLLBACK"); } catch { /* ignore rollback errors */ }
       throw err;
     } finally {
       client.release();
@@ -213,7 +213,7 @@ export class TaskRepository implements ITaskRepository {
 
       await client.query("COMMIT");
     } catch (err) {
-      await client.query("ROLLBACK");
+      try { await client.query("ROLLBACK"); } catch { /* ignore rollback errors */ }
       throw err;
     } finally {
       client.release();

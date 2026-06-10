@@ -1,4 +1,4 @@
-export { createConnection, getQueryable, closeConnection } from "./connection";
+export { createConnection, getQueryable, closeConnection, reloadDatabase } from "./connection";
 export type { Queryable } from "./connection";
 export { migrate } from "./migrate";
 

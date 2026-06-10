@@ -22,4 +22,9 @@ export async function closeConnection(): Promise<void> {
   }
 }
 
+export function reloadDatabase(): void {
+  if (!instance) throw new Error("Database not initialized. Call createConnection() first.");
+  instance.reload();
+}
+
 export type { DatabaseInstance, Queryable } from "./sqlite-adapter";

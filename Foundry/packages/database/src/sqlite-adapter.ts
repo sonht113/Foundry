@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, statSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import path from "path";
 
@@ -21,6 +21,7 @@ export interface Queryable {
 export interface DatabaseInstance {
   pool: Queryable;
   close(): Promise<void>;
+  reload(): void;
 }
 
 function convertParams(sql: string, params?: unknown[]): { sql: string; params: unknown[] } {
@@ -33,7 +34,8 @@ function convertParams(sql: string, params?: unknown[]): { sql: string; params: 
   return { sql: converted, params: expanded };
 }
 
-const WRITE_COMMANDS = ["INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "REPLACE"];
+const WRITE_COMMANDS = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "REPLACE"];
+const STRUCTURE_COMMANDS = ["CREATE TABLE", "CREATE INDEX", "CREATE VIEW", "CREATE TRIGGER"];
 
 function getDefaultDataDir(): string {
   const platform = process.platform;
@@ -135,16 +137,45 @@ CREATE TABLE IF NOT EXISTS "settings" (
 );
 `;
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function createSqliteConnection(dataDir?: string): Promise<DatabaseInstance> {
   const SQL = await initSqlJs();
 
   const resolvedDataDir = expandEnvPath(dataDir || getDefaultDataDir());
+  console.log(`[Foundry DB] SQLITE_DATA_DIR env: ${process.env.SQLITE_DATA_DIR ?? "(not set)"}`);
+  console.log(`[Foundry DB] Resolved path: ${resolvedDataDir}`);
 
-  let db: SqlJsDatabase;
-  try {
-    const buffer = readFileSync(resolvedDataDir);
-    db = new SQL.Database(buffer);
-  } catch {
+  let db: SqlJsDatabase = null!;
+  let fromFile = false;
+  let lastLoadTime = 0;
+
+  const MAX_RETRIES = 3;
+  const BASE_DELAY_MS = 100;
+  let readErr: Error | null = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const buffer = readFileSync(resolvedDataDir);
+      if (buffer.length === 0) {
+        throw new Error("Empty database file");
+      }
+      db = new SQL.Database(buffer);
+      fromFile = true;
+      console.log(`[Foundry DB] Loaded from file (attempt ${attempt + 1})`);
+      break;
+    } catch (err) {
+      readErr = err as Error;
+      if (attempt < MAX_RETRIES - 1) {
+        await sleep(BASE_DELAY_MS * Math.pow(2, attempt));
+      }
+    }
+  }
+
+  if (!fromFile) {
+    console.warn(`[Foundry DB] Failed to read file after ${MAX_RETRIES} retries:`, readErr?.message);
     const dir = path.dirname(resolvedDataDir);
     try {
       const { mkdirSync } = await import("fs");
@@ -155,19 +186,54 @@ export async function createSqliteConnection(dataDir?: string): Promise<Database
     db = new SQL.Database();
   }
 
+  lastLoadTime = Date.now();
+
   db.run("PRAGMA journal_mode=WAL");
   db.run("PRAGMA foreign_keys=ON");
 
   db.run(CREATE_TABLES_SQL);
 
+  function checkAndReload(): void {
+    if (!resolvedDataDir) return;
+    try {
+      const stats = statSync(resolvedDataDir);
+      if (stats.mtimeMs <= lastLoadTime) return;
+      const buffer = readFileSync(resolvedDataDir);
+      if (buffer.length === 0) return;
+      db.close();
+      db = new SQL.Database(buffer);
+      db.run("PRAGMA journal_mode=WAL");
+      db.run("PRAGMA foreign_keys=ON");
+      lastLoadTime = stats.mtimeMs;
+      console.log("[Foundry DB] Auto-reloaded from file (external change detected)");
+    } catch {
+      // best-effort; if reload fails, keep using current DB
+    }
+  }
+
+  function reload(): void {
+    if (!resolvedDataDir) return;
+    const buffer = readFileSync(resolvedDataDir);
+    if (buffer.length === 0) return;
+    db.close();
+    db = new SQL.Database(buffer);
+    db.run("PRAGMA journal_mode=WAL");
+    db.run("PRAGMA foreign_keys=ON");
+    lastLoadTime = Date.now();
+    console.log("[Foundry DB] Force-reloaded from file");
+  }
+
   function maybeSave(sql: string) {
     if (!resolvedDataDir) return;
     const upperSql = sql.trim().toUpperCase();
+    const isStructure = STRUCTURE_COMMANDS.some((cmd) => upperSql.startsWith(cmd));
+    if (isStructure) return;
     const isWrite = WRITE_COMMANDS.some((cmd) => upperSql.startsWith(cmd));
     if (isWrite) {
       try {
         const data = db.export();
         writeFileSync(resolvedDataDir, Buffer.from(data));
+        lastLoadTime = Date.now();
       } catch {
         // best-effort save
       }
@@ -185,16 +251,51 @@ export async function createSqliteConnection(dataDir?: string): Promise<Database
       rows.push(stmt.getAsObject() as T);
     }
     stmt.free();
-    maybeSave(sql);
     return { rows };
   }
 
+  function createClient(): QueryClient {
+    let inTransaction = false;
+
+    return {
+      query: async <T = unknown>(sql: string, params?: unknown[]) => {
+        checkAndReload();
+        const upperSql = sql.trim().toUpperCase();
+        if (upperSql === "BEGIN" || upperSql.startsWith("BEGIN ")) {
+          inTransaction = true;
+        }
+        const result = query<T>(sql, params);
+        if (!inTransaction) {
+          maybeSave(sql);
+        }
+        if (upperSql === "COMMIT" || upperSql.startsWith("COMMIT ") || upperSql === "ROLLBACK" || upperSql.startsWith("ROLLBACK ")) {
+          inTransaction = false;
+          if (resolvedDataDir) {
+            try {
+              const data = db.export();
+              writeFileSync(resolvedDataDir, Buffer.from(data));
+              lastLoadTime = Date.now();
+            } catch {
+              // best-effort save
+            }
+          }
+        }
+        return result;
+      },
+      release: () => {
+        inTransaction = false;
+      },
+    };
+  }
+
   const pool: Queryable = {
-    query: async <T = unknown>(sql: string, params?: unknown[]) => query<T>(sql, params),
-    connect: async (): Promise<QueryClient> => ({
-      query: async <T = unknown>(sql: string, params?: unknown[]) => query<T>(sql, params),
-      release: () => {},
-    }),
+    query<T>(sql: string, params?: unknown[]) {
+      checkAndReload();
+      const result = query<T>(sql, params);
+      maybeSave(sql);
+      return Promise.resolve(result);
+    },
+    connect: async () => createClient(),
   };
 
   return {
@@ -203,10 +304,12 @@ export async function createSqliteConnection(dataDir?: string): Promise<Database
       try {
         const data = db.export();
         writeFileSync(resolvedDataDir, Buffer.from(data));
+        lastLoadTime = Date.now();
       } catch {
         // best-effort save
       }
       db.close();
     },
+    reload,
   };
 }
