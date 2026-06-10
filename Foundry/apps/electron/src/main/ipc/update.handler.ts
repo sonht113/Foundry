@@ -1,3 +1,6 @@
+import { readFileSync } from "fs";
+import { join } from "path";
+
 import { app, BrowserWindow, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 
@@ -103,6 +106,11 @@ export function registerUpdateHandlers(): void {
   });
 
   ipcMain.handle("app:getVersion", async () => {
-    return { version: app.getVersion() };
+    try {
+      const pkg = JSON.parse(readFileSync(join(__dirname, "../../../package.json"), "utf-8"));
+      return { version: pkg.version as string };
+    } catch {
+      return { version: app.getVersion() };
+    }
   });
 }
