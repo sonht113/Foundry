@@ -28,9 +28,9 @@ export function AppLogo({ size = 20 }: { size?: number }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M0 1 V 24" strokeWidth="4.5" />
-        <path d="M0 1 H 22" strokeWidth="4.5" />
-        <path d="M0 12 H 16" strokeWidth="4.5" />
+        <path d="M0 1 V24" strokeWidth="4.5" />
+        <path d="M0 1 H22" strokeWidth="4.5" />
+        <path d="M0 12 H16" strokeWidth="4.5" />
       </g>
       <circle cx="72" cy="18" r="3" fill="#A78BFA" opacity="0.85" />
     </svg>

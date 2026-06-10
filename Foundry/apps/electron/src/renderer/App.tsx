@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { ToastContainer } from "./components/common/ToastContainer";
 import { Dashboard } from "./components/dashboard/Dashboard";
