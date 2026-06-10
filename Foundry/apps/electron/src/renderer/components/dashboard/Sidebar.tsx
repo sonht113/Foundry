@@ -184,7 +184,13 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
           }`}
         >
           <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
-            <Hash size={18} className="text-indigo-500 dark:text-indigo-400" />
+            <svg viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px] shrink-0 text-indigo-500 dark:text-indigo-400">
+              <path d="M12 2L22 12L12 22L2 12Z" fill="currentColor" opacity="0.9" />
+              <path d="M10 8V16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 8H15" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 12H13.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="17" cy="6" r="1.5" fill="currentColor" opacity="0.6" />
+            </svg>
             {!collapsed && (
               <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Foundry</span>
             )}
