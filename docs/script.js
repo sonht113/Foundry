@@ -118,6 +118,33 @@
   }
 })();
 
+// ===== Hero Title Word Animation =====
+(function () {
+  var accentWords = ['AI', 'Agents', 'Forge', 'Đồng', 'Hành'];
+
+  function animateHeroTitle() {
+    var title = document.querySelector('.hero-title');
+    if (!title) return;
+
+    var span = title.querySelector('span');
+    var text = (span || title).textContent.trim();
+    var words = text.split(/\s+/);
+
+    var html = '';
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      var delay = i * 70;
+      var cls = accentWords.indexOf(w) !== -1 ? 'hword hword-a' : 'hword';
+      html += '<span class="' + cls + '" style="animation-delay:' + delay + 'ms">' + w + '</span> ';
+    }
+
+    if (span) span.innerHTML = html;
+    else title.innerHTML = html;
+  }
+
+  window.animateHeroTitle = animateHeroTitle;
+})();
+
 // ===== Language Toggle =====
 (function () {
   var toggle = document.getElementById('langToggle');
@@ -148,36 +175,8 @@
       if (text !== null) el.innerHTML = text;
     }
 
-    animateHeroTitle();
+    setTimeout(animateHeroTitle, 50);
   }
-})();
-
-// ===== Hero Title Word Animation =====
-(function () {
-  var accentWords = ['AI', 'Agents', 'Đồng', 'Hành'];
-
-  function animateHeroTitle() {
-    var title = document.querySelector('.hero-title');
-    if (!title) return;
-
-    var span = title.querySelector('span');
-    var text = (span || title).textContent.trim();
-    var words = text.split(/\s+/);
-
-    var html = '';
-    for (var i = 0; i < words.length; i++) {
-      var w = words[i];
-      var delay = i * 55;
-      var cls = accentWords.indexOf(w) !== -1 ? 'hword hword-a' : 'hword';
-      html += '<span class="' + cls + '" style="animation-delay:' + delay + 'ms">' + w + '</span> ';
-    }
-
-    if (span) span.innerHTML = html;
-    else title.innerHTML = html;
-  }
-
-  window.animateHeroTitle = animateHeroTitle;
-  setTimeout(animateHeroTitle, 100);
 })();
 
 // ===== MCP Tab Switcher =====

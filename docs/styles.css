@@ -226,29 +226,36 @@ img { max-width: 100%; display: block; }
 /* Animated word spans */
 .hword {
   display: inline-block;
-  animation: wordReveal 0.55s ease-out both;
+  animation: wordReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hword-a {
-  background: linear-gradient(135deg, var(--accent), var(--accent-glow));
+  background: linear-gradient(135deg, var(--accent) 20%, var(--accent-glow) 50%, var(--accent) 80%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: wordReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both, shimmer 2.5s ease-in-out infinite;
 }
 
 @keyframes wordReveal {
   from {
     opacity: 0;
-    transform: translateY(24px);
-    filter: blur(4px);
+    transform: translateY(32px) scale(0.85);
+    filter: blur(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     filter: blur(0);
   }
 }
 
-.accent-inline { display: none; }
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+.accent-inline { background: linear-gradient(135deg, var(--accent), var(--accent-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 .hero-sub {
   font-size: 1.05rem;
