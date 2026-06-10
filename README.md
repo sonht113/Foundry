@@ -7,7 +7,7 @@ An AI-native task manager where **both humans (UI) and AI agents (MCP) are first
     <img src="https://img.shields.io/badge/Landing%20Page-sonht113.github.io/Foundry-6366F1?style=for-the-badge&logo=github" alt="Landing Page" />
   </a>
   <a href="https://github.com/sonht113/Foundry/releases" target="_blank">
-    <img src="https://img.shields.io/badge/v0.3.2-f59e0b?style=for-the-badge" alt="Latest Release" />
+    <img src="https://img.shields.io/badge/v0.3.3-f59e0b?style=for-the-badge" alt="Latest Release" />
   </a>
 </div>
 
