@@ -20,6 +20,9 @@ jobs:
           - os: windows-latest
             target: --win
             asset-name: windows-nsis
+          - os: macos-latest
+            target: --mac
+            asset-name: macos-dmg
 
     runs-on: ${{ matrix.os }}
 
@@ -50,20 +53,10 @@ jobs:
       - name: Build
         working-directory: Foundry
         run: pnpm build
-        env:
-          DATABASE_BACKEND: pglite
-          PGLITE_DATA_DIR: ./.pglite
 
       - name: Package
         working-directory: Foundry/apps/electron
-        run: npx electron-builder ${{ matrix.target }} --publish never
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Foundry-${{ matrix.asset-name }}
-          path: Foundry/apps/electron/dist/installers/*
-          if-no-files-found: error
+        run: npx electron-builder ${{ matrix.target }} --publish always
 
       - name: Upload to Release
         if: startsWith(github.ref, 'refs/tags/')
