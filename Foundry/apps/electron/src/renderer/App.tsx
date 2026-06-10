@@ -23,6 +23,8 @@ export function App() {
   const searchOpen = useUIStore((s) => s.searchOpen);
   const selectedTaskId = useTaskStore((s) => s.selectedTaskId);
   const loadProjects = useProjectStore((s) => s.loadProjects);
+  const loadTasks = useTaskStore((s) => s.loadTasks);
+  const loadColumns = useTaskStore((s) => s.loadColumns);
   const setSearchOpen = useUIStore((s) => s.setSearchOpen);
   const moveTask = useTaskStore((s) => s.moveTask);
   const setSelectedTask = useTaskStore((s) => s.setSelectedTask);
@@ -36,6 +38,18 @@ export function App() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const setSidebarCollapsed = useUIStore((s) => s.setSidebarCollapsed);
   const setDbBackend = useUIStore((s) => s.setDbBackend);
+
+  async function reloadData() {
+    try {
+      await loadProjects();
+      if (currentProjectId) {
+        await Promise.all([loadTasks(currentProjectId), loadColumns(currentProjectId)]);
+      }
+      addToast("Data reloaded", "success");
+    } catch {
+      addToast("Failed to reload data", "error");
+    }
+  }
 
   useEffect(() => {
     initializeApp();
@@ -103,6 +117,12 @@ export function App() {
       if (meta && e.key === "`") {
         e.preventDefault();
         toggleTerminal();
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        reloadData().catch(() => {});
         return;
       }
     }

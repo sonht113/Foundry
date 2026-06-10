@@ -1,8 +1,9 @@
-import { ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Plus, RefreshCw } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { useProjectStore } from "../../stores/projectStore";
 import { useTaskStore } from "../../stores/taskStore";
+import { useUIStore } from "../../stores/uiStore";
 import { Button } from "../common/Button";
 import { EmptyState } from "../common/EmptyState";
 import { HorizontalScrollBar } from "../common/HorizontalScrollBar";
@@ -13,12 +14,32 @@ import { QuickCreateModal } from "../task/QuickCreateModal";
 export function Dashboard() {
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const projects = useProjectStore((s) => s.projects);
+  const loadProjects = useProjectStore((s) => s.loadProjects);
   const tasks = useTaskStore((s) => s.tasks);
   const loading = useTaskStore((s) => s.loading);
+  const loadTasks = useTaskStore((s) => s.loadTasks);
+  const loadColumns = useTaskStore((s) => s.loadColumns);
+  const addToast = useUIStore((s) => s.addToast);
   const [showCreate, setShowCreate] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  async function handleReload() {
+    setReloading(true);
+    try {
+      await loadProjects();
+      if (currentProjectId) {
+        await Promise.all([loadTasks(currentProjectId), loadColumns(currentProjectId)]);
+      }
+      addToast("Data reloaded", "success");
+    } catch {
+      addToast("Failed to reload data", "error");
+    } finally {
+      setReloading(false);
+    }
+  }
 
   if (!currentProject) {
     return <HomePage />;
@@ -49,10 +70,21 @@ export function Dashboard() {
             </p>
           )}
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus size={14} className="mr-1" />
-          New Task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleReload}
+            disabled={reloading || loading}
+            title="Reload data"
+          >
+            <RefreshCw size={14} className={reloading ? "animate-spin" : ""} />
+          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus size={14} className="mr-1" />
+            New Task
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
