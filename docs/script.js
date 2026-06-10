@@ -145,7 +145,7 @@
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       var text = lang === 'en' ? el.getAttribute('data-lang-en') : el.getAttribute('data-lang-vi');
-      if (text !== null) el.textContent = text;
+      if (text !== null)       el.innerHTML = text;
     }
   }
 })();
