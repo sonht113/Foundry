@@ -113,9 +113,11 @@ interface ElectronAPI {
   update: {
     check: () => Promise<{ success: boolean; version?: string; reason?: string }>;
     install: () => Promise<{ success: boolean }>;
+    getStatus: () => Promise<{ state: string; version?: string; releaseNotes?: string }>;
     onChecking: (cb: () => void) => void;
     onAvailable: (cb: (info: { version: string; releaseNotes?: string }) => void) => void;
     onNotAvailable: (cb: () => void) => void;
+    onDownloading: (cb: (progress: { percent: number }) => void) => void;
     onDownloaded: (cb: () => void) => void;
     onError: (cb: (error: { message: string }) => void) => void;
     removeAllListeners: () => void;

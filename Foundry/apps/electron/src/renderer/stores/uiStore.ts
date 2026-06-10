@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 type Theme = "dark" | "light";
 type ToastType = "success" | "error" | "warning" | "info";
-type UpdateState = "idle" | "checking" | "available" | "downloading" | "downloaded" | "not-available" | "error";
+export type UpdateState = "idle" | "checking" | "available" | "downloading" | "downloaded" | "not-available" | "error";
 
 interface Toast {
   id: string;

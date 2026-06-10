@@ -133,6 +133,7 @@ const electronAPI = {
   update: {
     check: () => ipcRenderer.invoke("update:check"),
     install: () => ipcRenderer.invoke("update:install"),
+    getStatus: () => ipcRenderer.invoke("update:getStatus"),
     onChecking: (cb: () => void) => {
       ipcRenderer.on("update:checking", () => cb());
     },
@@ -145,6 +146,9 @@ const electronAPI = {
     onDownloaded: (cb: () => void) => {
       ipcRenderer.on("update:downloaded", () => cb());
     },
+    onDownloading: (cb: (progress: { percent: number }) => void) => {
+      ipcRenderer.on("update:downloading", (_event, progress) => cb(progress));
+    },
     onError: (cb: (error: { message: string }) => void) => {
       ipcRenderer.on("update:error", (_event, error) => cb(error));
     },
@@ -152,6 +156,7 @@ const electronAPI = {
       ipcRenderer.removeAllListeners("update:checking");
       ipcRenderer.removeAllListeners("update:available");
       ipcRenderer.removeAllListeners("update:not-available");
+      ipcRenderer.removeAllListeners("update:downloading");
       ipcRenderer.removeAllListeners("update:downloaded");
       ipcRenderer.removeAllListeners("update:error");
     },

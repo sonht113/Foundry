@@ -1,9 +1,10 @@
-import { ArrowUpCircle, ChevronLeft, ChevronRight, Command, Download, Hash, Home, Plus, RefreshCw, Search, Settings, Terminal, Trash2, Wifi } from "lucide-react";
+import { AlertCircle, ArrowUpCircle, ChevronLeft, ChevronRight, Command, Download, Hash, Home, Plus, RefreshCw, Search, Settings, Terminal, Trash2, Wifi } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useProjectStore } from "../../stores/projectStore";
 import { useTaskStore } from "../../stores/taskStore";
 import { useUIStore } from "../../stores/uiStore";
+import type { UpdateState } from "../../stores/uiStore";
 import { Button } from "../common/Button";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { ThemeToggle } from "../common/ThemeToggle";
@@ -46,6 +47,8 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   function handleSelectProject(id: string) {
     setCurrentProject(id);
@@ -82,18 +85,51 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
     const api = window.electronAPI;
     if (!api?.update) return;
 
-    api.update.onChecking(() => setUpdateState("checking"));
+    let mounted = true;
+
+    api.update.onChecking(() => {
+      if (!mounted) return;
+      setUpdateState("checking");
+      setDownloadError(null);
+    });
     api.update.onAvailable((info) => {
+      if (!mounted) return;
       setUpdateState("available");
       setUpdateInfo(info);
+      setDownloadError(null);
     });
-    api.update.onNotAvailable(() => setUpdateState("not-available"));
+    api.update.onNotAvailable(() => {
+      if (!mounted) return;
+      setUpdateState("not-available");
+    });
+    api.update.onDownloading((progress) => {
+      if (!mounted) return;
+      setUpdateState("downloading");
+      setDownloadProgress(Math.round(progress.percent));
+    });
     api.update.onDownloaded(() => {
+      if (!mounted) return;
       setUpdateState("downloaded");
     });
-    api.update.onError(() => setUpdateState("error"));
+    api.update.onError((error) => {
+      if (!mounted) return;
+      setUpdateState("error");
+      setDownloadError(error.message);
+      console.error("[Foundry] Update error:", error.message);
+    });
+
+    api.update.getStatus().then((status) => {
+      if (!mounted) return;
+      if (status.state && status.state !== "idle") {
+        setUpdateState(status.state as UpdateState);
+        if (status.version) {
+          setUpdateInfo({ version: status.version, releaseNotes: status.releaseNotes });
+        }
+      }
+    }).catch(() => {});
 
     return () => {
+      mounted = false;
       api.update.removeAllListeners();
     };
   }, []);
@@ -103,6 +139,17 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       await window.electronAPI.update.install();
     } catch {
       addToast("Failed to install update", "error");
+    }
+  }
+
+  async function handleRetryUpdate() {
+    try {
+      setUpdateState("checking");
+      setDownloadError(null);
+      await window.electronAPI.update.check();
+    } catch {
+      setUpdateState("error");
+      setDownloadError("Failed to retry update check");
     }
   }
 
@@ -313,13 +360,38 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
               >
                 <Terminal size={14} />
               </button>
+              {updateState === "checking" && (
+                <div
+                  className="flex w-full cursor-default items-center justify-center rounded-md p-2 text-zinc-400"
+                  title="Checking for updates..."
+                >
+                  <RefreshCw size={14} className="animate-spin" />
+                </div>
+              )}
               {(updateState === "available" || updateState === "downloaded") && (
                 <button
                   onClick={handleInstallUpdate}
                   className="flex w-full cursor-pointer items-center justify-center rounded-md p-2 text-amber-500 transition-colors hover:bg-amber-500/10"
-                  title={`Update to v${updateInfo?.version}`}
+                  title={updateState === "downloaded" ? "Restart to install update" : `Update to v${updateInfo?.version}`}
                 >
                   <ArrowUpCircle size={14} />
+                </button>
+              )}
+              {updateState === "downloading" && (
+                <div
+                  className="flex w-full cursor-default items-center justify-center rounded-md p-2 text-amber-500"
+                  title={`Downloading update... ${downloadProgress}%`}
+                >
+                  <Download size={14} className="animate-pulse" />
+                </div>
+              )}
+              {updateState === "error" && (
+                <button
+                  onClick={handleRetryUpdate}
+                  className="flex w-full cursor-pointer items-center justify-center rounded-md p-2 text-red-500 transition-colors hover:bg-red-500/10"
+                  title={downloadError ?? "Update check failed. Click to retry."}
+                >
+                  <AlertCircle size={14} />
                 </button>
               )}
               {dbBackend && (
@@ -380,6 +452,12 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <Hash size={14} />
                 <span className="flex-1">Cmd+1-4 status</span>
               </div>
+              {updateState === "checking" && (
+                <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-400">
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span className="flex-1 text-left">Checking for updates...</span>
+                </div>
+              )}
               {(updateState === "available" || updateState === "downloaded") && (
                 <button
                   onClick={handleInstallUpdate}
@@ -393,6 +471,36 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                     {updateState === "downloaded" ? "OK" : "New"}
                   </span>
                 </button>
+              )}
+              {updateState === "downloading" && (
+                <div className="rounded-md px-2 py-1.5 text-sm">
+                  <div className="mb-1 flex items-center gap-2 text-amber-500">
+                    <Download size={14} className="animate-pulse" />
+                    <span className="flex-1 text-left">Downloading {downloadProgress}%</span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                    <div
+                      className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                      style={{ width: `${downloadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {updateState === "error" && (
+                <div className="rounded-md px-2 py-1.5">
+                  <div className="mb-1 flex items-center gap-2 text-sm text-red-500">
+                    <AlertCircle size={14} />
+                    <span className="flex-1 text-left text-xs truncate">
+                      {downloadError ?? "Update failed"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRetryUpdate}
+                    className="w-full cursor-pointer rounded px-2 py-0.5 text-center text-xs text-amber-500 transition-colors hover:bg-amber-500/10"
+                  >
+                    Retry
+                  </button>
+                </div>
               )}
               {dbBackend && (
                 <div
