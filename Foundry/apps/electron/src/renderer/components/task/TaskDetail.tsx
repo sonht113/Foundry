@@ -1,9 +1,8 @@
-import { isTaskOverdue } from "@foundry/shared";
 import { AlertTriangle, CalendarDays, Clock3, GripVertical, MessageSquare, Paperclip, Play, StickyNote, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, PRIORITY_COLORS } from "../../lib/constants";
-import { formatSafeDate } from "../../lib/formatDate";
+import { formatSafeDate, isTaskOverdue } from "../../lib/formatDate";
 import { useConversationStore } from "../../stores/conversationStore";
 import { useNoteStore } from "../../stores/noteStore";
 import { useTaskStore } from "../../stores/taskStore";
@@ -144,26 +143,38 @@ export function TaskDetail() {
       assignee: "Assignee",
       description: "Description",
       start_date: "Start Date",
+      startDate: "Start Date",
       end_date: "End Date",
+      endDate: "End Date",
       estimate_hours: "Estimate",
+      estimateHours: "Estimate",
       created: "Created",
     };
     const label = labels[field] ?? field;
+
+    function formatVal(val: string | null): string {
+      if (!val) return "—";
+      if (/^\d{4}-\d{2}-\d{2}T/.test(val)) {
+        return formatSafeDate(val);
+      }
+      return val;
+    }
+
     if (field === "created") return `Task created`;
     if (field === "status") {
       const from = columns.find((c) => c.id === oldVal)?.name ?? oldVal ?? "—";
       const to = columns.find((c) => c.id === newVal)?.name ?? newVal ?? "—";
       return `${label}: ${from} → ${to}`;
     }
-    return `${label}: ${oldVal ?? "—"} → ${newVal ?? "—"}`;
+    return `${label}: ${formatVal(oldVal)} → ${formatVal(newVal)}`;
   }
 
   return (
-    <div className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-zinc-200 bg-zinc-50 dark:border-zinc-200 dark:border-zinc-800 dark:bg-zinc-50 dark:bg-zinc-950">
-      <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-200 dark:border-zinc-800">
+    <div className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
         <button
           onClick={() => setSelectedTask(null)}
-          className="flex cursor-pointer items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-zinc-600 dark:text-zinc-300 dark:text-zinc-500 dark:text-zinc-700 dark:hover:text-zinc-300 dark:hover:text-zinc-600"
+          className="flex cursor-pointer items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
         >
           <X size={14} /> Close
         </button>
@@ -179,7 +190,7 @@ export function TaskDetail() {
               className={`cursor-pointer rounded-md px-2 py-1.5 text-[11px] font-medium transition-all ${
                 task.status === col.id
                   ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-600 dark:text-zinc-300 dark:text-zinc-500 dark:text-zinc-700 dark:hover:text-zinc-300"
+                  : "text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
             >
               {col.name}
@@ -189,8 +200,8 @@ export function TaskDetail() {
 
         {/* Overdue Warning */}
         {isTaskOverdue(task) && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950/40">
-            <AlertTriangle size={14} className="shrink-0 text-red-500 dark:text-red-400" />
+          <div className="flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950/40">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-red-500 dark:text-red-400" />
             <span className="text-xs font-medium text-red-600 dark:text-red-400">
               This task is overdue
               {task.endDate ? ` — due ${formatSafeDate(task.endDate)}` : ""}
@@ -334,7 +345,7 @@ export function TaskDetail() {
                   setAssigneeInput(task.assignee);
                   setEditingAssignee(true);
                 }}
-                className="flex-1 cursor-pointer rounded px-2 py-0.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 dark:text-zinc-400 dark:text-zinc-600"
+                className="flex-1 cursor-pointer rounded px-2 py-0.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400"
               >
                 {task.assignee || "Unassigned — click to set"}
               </span>
@@ -420,9 +431,9 @@ export function TaskDetail() {
             <div className="space-y-1.5">
               {history.map((h) => (
                 <div key={h.id} className="flex items-start gap-2 text-xs">
-                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-700" />
+                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-700" />
                   <div>
-                    <span className="text-zinc-400 dark:text-zinc-400 dark:text-zinc-600">
+                    <span className="text-zinc-400 dark:text-zinc-500">
                       {formatHistory(h.field, h.old_value, h.new_value, columns)}
                     </span>
                     <span className="ml-2 text-zinc-400 dark:text-zinc-600">
@@ -455,7 +466,7 @@ export function TaskDetail() {
                 key={note.id}
                 className="group rounded-lg border border-zinc-200 bg-white p-2.5 dark:border-zinc-800 dark:bg-zinc-900"
               >
-                <p className="text-xs leading-relaxed whitespace-pre-wrap text-zinc-300 dark:text-zinc-300 dark:text-zinc-700">
+                <p className="text-xs leading-relaxed whitespace-pre-wrap text-zinc-300 dark:text-zinc-300">
                   {note.content}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between">
@@ -473,7 +484,7 @@ export function TaskDetail() {
             ))}
             <div className="flex gap-2">
               <input
-                className="flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:text-zinc-600"
+                className="flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                 placeholder="Add a note..."
                 value={noteContent}
                 onChange={(e) => setNoteContent(e.target.value)}
